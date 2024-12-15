@@ -416,12 +416,21 @@ class Element
     @forms = forms
   end
 
+  def equate form
+    #or take element?
+    @forms << form unless eq?(form)
+  end
+
   def normal_form
     @forms.find {|x| normal?(x)}
   end
 
-  def to_s
-    @forms
+  def form
+    @forms[0]
+  end
+
+  def inspect
+    "Elt#{@forms}"
   end
 
   def copy
@@ -429,18 +438,66 @@ class Element
   end
 
   def eq? x
-    @forms.index(x)
+    if x.is_a?(Element)
+      !forms.intersection(x.forms).empty?
+    else
+      @forms.index(x)
+    end
   end
 end
 
 def ev_product x, y, elts
-  elts.find {|elt| elt.eq?([x, y])}
+  #x and y elements
+  elts.find {|elt| elt.eq?([x.form, y.form])}
+end
+
+def atom x
+  !x.is_a?(Array)
+end
+
+def simplify_expression expr, elts
+  #an expression is a product (size 2 array) of expressions or a single element
+  x, y = expr
+  puts "simp #{x.to_s}, #{y.to_s}, #{x.class} #{y.class}"
+  if atom(expr)
+    expr
+  elsif atom(x) && atom(y)
+    ev_product(x, y, elts) || expr
+  else
+    x2 = simplify_expression(x, elts)
+    y2 = simplify_expression(y, elts)
+    (atom(x2) && atom(y2) && ev_product(x2, y2, elts)) || [x2, y2]
+  end
 end
 
 def simplify_677 x, y, elts
-  yx = ev_product(y, x, elts)
-  if yx
-  [y, [x, [[y, x], y]]]
+  #x = [y, [x, [[y, x], y]]]
+  rhs = simplify_expression([y, [x, [[y, x], y]]], elts)
+  lhs = x
+
+  #yx = ev_product(y, x, elts)
+  #if yx
+  #  yx_y = ev_product(yx, y, elts)
+  #  [y, [x, [yx, y]]]
+  #else
+  #[y, [x, [[y, x], y]]]
+  ##give the simplest equality here
+  #end
+end
+
+def assume(elts, inequalities, i, x, y)#, steps: 10)
+  puts "trying #{elts[i].to_s} = #{x.to_s}*#{y.to_s}"
+  elts2 = elts.dup #new array, same elements to avoid copying
+  elts2[i] = Element.new(elts[i].forms + [[x.form, y.form]]) #normal_form?
+  #p elts2[0].forms
+  inequalities.each do |lhs, rhs|
+    puts "checking #{lhs} != #{rhs}"
+    p "rhs", sl = simplify_expression(lhs, elts)
+    p "lhs", sr = simplify_expression(rhs, elts)
+    if sl == sr
+      puts "failed"
+    end
+  end
 end
 
 def cex_677_255
@@ -449,17 +506,27 @@ def cex_677_255
   #a contradiction means either proving 255[a] or proving that known-distinct elements are equal.
 
   #x = y(x((yx)y))
-  rhs677 = -> x,y {[y, [x, [[y, x], y]]]}
+  #rhs677 = -> x,y {[y, [x, [[y, x], y]]]}
   #x = ((xx)x)x = (x²x)x
-  rhs255 = -> x {[[[x, x], x], x]}
+  #rhs255 = -> x {[[[x, x], x], x]}
   elts = [Element.new(A)]
-  inequalities = [[A, [A, A]]]
-  elts[0]
+  #should we only add a new element when it's known to be distinct from all the others?
+  a = elts[0]
+  #p a
+  inequalities = [[a, [[[a, a], a], a]]] #initialize with !255[a]
+  #[[A, [A, A]]]
+  elts.product(elts).each do |x, y|
+    if !ev_product(x, y, elts)
+      puts "#{x.to_s}.#{y.to_s} undefined"
+      elts.each_with_index do |potential_prod, i|
+        assume(elts, inequalities, i, x, y)
+      end
+    end
+  end
   used_677_on = {}
 end
 
-def assume(elts, inequalities, eqn, steps)
-end
+cex_677_255
 
 #usage:
 #describe(fmb_to_array("..."))
