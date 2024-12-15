@@ -433,6 +433,10 @@ class Element
     "Elt#{@forms}"
   end
 
+  def to_s
+    inspect
+  end
+
   def copy
     Element.new(@forms)
   end
@@ -457,16 +461,24 @@ end
 
 def simplify_expression expr, elts
   #an expression is a product (size 2 array) of expressions or a single element
-  x, y = expr
-  puts "simp #{x.to_s}, #{y.to_s}, #{x.class} #{y.class}"
   if atom(expr)
     expr
-  elsif atom(x) && atom(y)
-    ev_product(x, y, elts) || expr
   else
-    x2 = simplify_expression(x, elts)
-    y2 = simplify_expression(y, elts)
-    (atom(x2) && atom(y2) && ev_product(x2, y2, elts)) || [x2, y2]
+    x, y = expr
+    #puts "simp #{x.to_s}, #{y.to_s}, #{x.class} #{y.class}"
+    if atom(x) && atom(y)
+      #puts "atom #{x.to_s} #{y.to_s} #{x.class} #{y.class}"
+      #puts "elts #{elts}"
+      prod = ev_product(x, y, elts)
+      #puts "prod #{prod}"
+      ev_product(x, y, elts) || expr
+    else
+      #puts "nonatom #{x.to_s} / #{y.to_s}"
+      x2 = simplify_expression(x, elts)
+      y2 = simplify_expression(y, elts)
+      #puts "simped #{x2.to_s} #{y2.to_s}"
+      (atom(x2) && atom(y2) && ev_product(x2, y2, elts)) || [x2, y2]
+    end
   end
 end
 
@@ -488,14 +500,14 @@ end
 def assume(elts, inequalities, i, x, y)#, steps: 10)
   puts "trying #{elts[i].to_s} = #{x.to_s}*#{y.to_s}"
   elts2 = elts.dup #new array, same elements to avoid copying
-  elts2[i] = Element.new(elts[i].forms + [[x.form, y.form]]) #normal_form?
-  #p elts2[0].forms
+  elts2[i] = Element.new(*(elts[i].forms + [[x.form, y.form]])) #normal_form?
   inequalities.each do |lhs, rhs|
     puts "checking #{lhs} != #{rhs}"
-    p "rhs", sl = simplify_expression(lhs, elts)
-    p "lhs", sr = simplify_expression(rhs, elts)
-    if sl == sr
+    sl = simplify_expression(lhs, elts2)
+    sr = simplify_expression(rhs, elts2)
+    if sl.eq?(sr)
       puts "failed"
+      return false
     end
   end
 end
@@ -520,6 +532,7 @@ def cex_677_255
       puts "#{x.to_s}.#{y.to_s} undefined"
       elts.each_with_index do |potential_prod, i|
         assume(elts, inequalities, i, x, y)
+        puts "refuted"
       end
     end
   end
