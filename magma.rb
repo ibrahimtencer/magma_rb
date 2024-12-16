@@ -463,9 +463,14 @@ class Element
   end
 end
 
+def find_elt x, elts
+  elts.find {|elt| elt.eq?(x)}
+end
+
 def ev_product x, y, elts
   #x and y elements
-  elts.find {|elt| elt.eq?([x.form, y.form])}
+  #elts.find {|elt| elt.eq?([x.form, y.form])}
+  find_elt([x.form, y.form], elts)
 end
 
 def atom x
@@ -568,7 +573,15 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
     #construct and simplify 677 instances
     elts.product(elts).each do |x, y|
       i = [x.form, y.form]
-      instances_677[i] = instances_677[i] ? simplify_677(*instances_677[i], elts) : simplify_677(x, Rhs677[x, y], elts)
+      eq = instances_677[i] ? simplify_677(*instances_677[i], elts) : simplify_677(x, Rhs677[x, y], elts)
+      instances_677[i] = eq
+      #check that this doesn't equate known-distinct elements
+      lhs = find_elt(eq[0], elts)
+      rhs = find_elt(eq[1], elts)
+      if lhs && rhs && lhs != rhs
+        puts "equates #{lhs} and #{rhs}, contradiction"
+        return false
+      end
     end
     p instances_677
     #need to refute a a^2 = a (2-cycle lemma)
