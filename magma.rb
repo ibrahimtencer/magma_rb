@@ -510,6 +510,7 @@ def assume(elts, inequalities, i, x, y)#, steps: 10)
       return false
     end
   end
+  return true
 end
 
 def cex_677_255
@@ -527,14 +528,27 @@ def cex_677_255
   #p a
   inequalities = [[a, [[[a, a], a], a]]] #initialize with !255[a]
   #[[A, [A, A]]]
-  elts.product(elts).each do |x, y|
-    if !ev_product(x, y, elts)
-      puts "#{x.to_s}.#{y.to_s} undefined"
-      elts.each_with_index do |potential_prod, i|
-        assume(elts, inequalities, i, x, y)
-        puts "refuted"
+  while 1
+    puts "elements: #{elts}"
+    elts.product(elts).each do |x, y|
+      if !ev_product(x, y, elts)
+        puts "#{x.to_s}.#{y.to_s} undefined"
+        refuted_all = true
+        elts.each_with_index do |potential_prod, i|
+          #try setting x*y equal to the ith element
+          status = assume(elts, inequalities, i, x, y)
+          if status
+            refuted_all = false
+          else
+            puts "refuted"
+            inequalities << [elts[i], [x, y]]
+          end
+        end
+        elts << Element.new([x.form, y.form]) if refuted_all #it cannot be an existing element so add a new one
       end
     end
+    puts "done"
+    gets
   end
   used_677_on = {}
 end
