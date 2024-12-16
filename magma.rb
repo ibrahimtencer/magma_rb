@@ -402,11 +402,10 @@ def test_all_cyclic m=1, n=5000
   end
 end
 
-A = :A
-
 def normal? x
   #normal form is a, aa, a(aa), a(a(aa)) i.e. left powers
-  x == A || (x[0] == A && normal?(x[1]))
+  #x == A || (x[0] == A && normal?(x[1]))
+  atom(x) || (atom(x[0]) && normal?(x[1]))
 end
 
 def show_form form, nested=false
@@ -542,29 +541,38 @@ def assume(elts, inequalities, i, x, y)#, steps: 10)
   return true
 end
 
-def cex_677_255
+#x = y(x((yx)y))
+Rhs677 = -> x, y {[y, [x, [[y, x], y]]]}
+
+Asym = :A
+A = Element.new(Asym)
+
+#def cex_677_255
+#  elts = [A]
+#  #instances_677 = {}
+#  inequalities = [[A, [[[A, A], A], A]]] #initialize with !255[a]
+#  cex_677_255_sub(elts, inequalities)
+#end
+
+def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_677= {}
   #we assume a=1 is a counterexample to 255 in a finite 677 magma and try to deduce what the model looks like
   #we try setting products to existing elements and either derive a contradiction or leave it as a possibility.
   #a contradiction means either proving 255[a] or proving that known-distinct elements are equal.
 
-  #x = y(x((yx)y))
-  rhs677 = -> x, y {[y, [x, [[y, x], y]]]}
   #x = ((xx)x)x = (x²x)x
   #rhs255 = -> x {[[[x, x], x], x]}
-  a = Element.new(A)
-  elts = [a]
+
   #should we only add a new element when it's known to be distinct from all the others?
-  #p a
-  inequalities = [[a, [[[a, a], a], a]]] #initialize with !255[a]
   while 1
     puts "elements: #{elts}"
     #construct and simplify 677 instances
-    instances_677 = {}
     elts.product(elts).each do |x, y|
       i = [x.form, y.form]
-      instances_677[i] = instances_677[i] ? simplify_677(*instances_677[i], elts) : simplify_677(x, rhs677[x, y], elts)
+      instances_677[i] = instances_677[i] ? simplify_677(*instances_677[i], elts) : simplify_677(x, Rhs677[x, y], elts)
     end
     p instances_677
+    #need to refute a a^2 = a (2-cycle lemma)
+    #Pf: if 
 
     elts.product(elts).each do |x, y|
       if !ev_product(x, y, elts)
