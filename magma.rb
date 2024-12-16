@@ -502,8 +502,7 @@ end
 
 def left_quotient x, y, elts
   #try to find z such that x = yz, which will be unique assuming that the magma operation is left-cancellative.
-  xy = [x, y]
-  elts.find {|e| e.eq?(xy)}
+  elts.find {|z| x.eq?(ev_product(y, z, elts))}
 end
 
 def simplify_677 lhs, rhs, elts
@@ -561,6 +560,9 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
   #should we only add a new element when it's known to be distinct from all the others?
   while 1
     puts "elements: #{elts}"
+    #puts "elements: #{elts.map(&:forms)}"
+    #puts "a*a = #{ev_product(elts[0], elts[0], elts)}"
+    #puts "a^2/a = #{left_quotient(elts[1]
     #construct and simplify 677 instances
     elts.product(elts).each do |x, y|
       i = [x.form, y.form]
@@ -592,12 +594,12 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
     elts.product(elts).each do |x, y|
       if !ev_product(x, y, elts)
         all_defined = false #needed?
-        puts "#{x.to_s}.#{y.to_s} undefined"
+        puts "", "#{x.to_s}.#{y.to_s} undefined"
         refuted_all = true
         elts.each_with_index do |potential_prod, i|
           #try setting x*y equal to the ith element
           hyp = "#{x.to_s}*#{y.to_s} = #{elts[i].to_s}"
-          puts "trying #{hyp}"
+          puts "", "trying #{hyp}"
           elts2 = elts.dup #new array, same elements to avoid copying
           elts2[i] = Element.new(*(elts[i].forms + [[x.form, y.form]])) #normal_form?
           status = cex_677_255(elts2, inequalities.dup, instances_677.dup)
