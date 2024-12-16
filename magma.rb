@@ -510,7 +510,7 @@ def simplify_677 lhs, rhs, elts
   #x = [y, [x, [[y, x], y]]]
   #the lhs and rhs may already be simplified using known information, we now try to simplify them further.
   rhs = simplify_expression(rhs, elts)
-  puts "677: #{rhs}"
+  puts "677: #{lhs} = #{rhs}"
   #the lhs should always be an atom due to the form of 677
   if atom(rhs)
     [lhs, rhs]
@@ -574,7 +574,7 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
         return false
       end
     end
-    p instances_677
+    #p instances_677
     #need to refute a a^2 = a (2-cycle lemma)
     #Pf: if 
     inequalities.each do |lhs, rhs|
@@ -587,33 +587,47 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
       end
     end
 
+    all_defined = true
+    new_elt = false
     elts.product(elts).each do |x, y|
       if !ev_product(x, y, elts)
+        all_defined = false #needed?
         puts "#{x.to_s}.#{y.to_s} undefined"
         refuted_all = true
         elts.each_with_index do |potential_prod, i|
           #try setting x*y equal to the ith element
-          hyp = "#{elts[i].to_s} = #{x.to_s}*#{y.to_s}"
+          hyp = "#{x.to_s}*#{y.to_s} = #{elts[i].to_s}"
           puts "trying #{hyp}"
           elts2 = elts.dup #new array, same elements to avoid copying
           elts2[i] = Element.new(*(elts[i].forms + [[x.form, y.form]])) #normal_form?
           status = cex_677_255(elts2, inequalities.dup, instances_677.dup)
 
           if status
-            refuted_all = false
+            puts "worked?"
+            return status
+            #refuted_all = false
             #continue to fill in model?
           else
             puts "refuted #{hyp}"
             inequalities << [elts[i], [x, y]]
           end
         end
-        if refuted_all #it cannot be an existing element so add a new one
-          elts << Element.new([x.form, y.form])
+        if refuted_all #it cannot be an existing element so add a new one and start over
+          new_elt = Element.new([x.form, y.form])
+          elts << new_elt
           break
         end
       end
     end
-    puts "done"
+
+    if new_elt
+      puts "added new element: #{new_elt}, now have #{elts.size}"
+    elsif all_defined
+      puts "done"
+      return elts
+    else
+      puts "continuing"
+    end
     gets
   end
 end
