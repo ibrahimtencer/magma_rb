@@ -482,10 +482,25 @@ def simplify_expression expr, elts
   end
 end
 
-def simplify_677 x, y, elts
+def left_quotient x, y, elts
+  #try to find z such that x = yz, which will be unique assuming that the magma operation is left-cancellative.
+  xy = [x, y]
+  elts.find {|e| e.eq?(xy)}
+end
+
+def simplify_677 lhs, rhs, elts
   #x = [y, [x, [[y, x], y]]]
-  rhs = simplify_expression([y, [x, [[y, x], y]]], elts)
-  lhs = x
+  #the lhs and rhs may already be simplified using known information, we now try to simplify them further.
+  rhs = simplify_expression(rhs, elts)
+  puts "677: #{rhs}"
+  #the lhs should always be an atom due to the form of 677
+  if atom(rhs)
+    [lhs, rhs]
+  elsif atom(rhs[0])
+    #here we cancel the variable on the left of the RHS, if we have enough information to do so.
+    quot = left_quotient(lhs, rhs[0], elts)
+    quot ? [quot, rhs[1]] : [lhs, rhs]
+  end
 
   #yx = ev_product(y, x, elts)
   #if yx
@@ -519,17 +534,24 @@ def cex_677_255
   #a contradiction means either proving 255[a] or proving that known-distinct elements are equal.
 
   #x = y(x((yx)y))
-  #rhs677 = -> x,y {[y, [x, [[y, x], y]]]}
+  rhs677 = -> x, y {[y, [x, [[y, x], y]]]}
   #x = ((xx)x)x = (x²x)x
   #rhs255 = -> x {[[[x, x], x], x]}
-  elts = [Element.new(A)]
+  a = Element.new(A)
+  elts = [a]
   #should we only add a new element when it's known to be distinct from all the others?
-  a = elts[0]
   #p a
   inequalities = [[a, [[[a, a], a], a]]] #initialize with !255[a]
-  #[[A, [A, A]]]
   while 1
     puts "elements: #{elts}"
+    #construct and simplify 677 instances
+    instances_677 = {}
+    elts.product(elts).each do |x, y|
+      i = [x.form, y.form]
+      instances_677[i] = instances_677[i] ? simplify_677(*instances_677[i], elts) : simplify_677(x, rhs677[x, y], elts)
+    end
+    p instances_677
+
     elts.product(elts).each do |x, y|
       if !ev_product(x, y, elts)
         puts "#{x.to_s}.#{y.to_s} undefined"
@@ -539,18 +561,21 @@ def cex_677_255
           status = assume(elts, inequalities, i, x, y)
           if status
             refuted_all = false
+            #continue to fill in model?
           else
             puts "refuted"
             inequalities << [elts[i], [x, y]]
           end
         end
-        elts << Element.new([x.form, y.form]) if refuted_all #it cannot be an existing element so add a new one
+        if refuted_all #it cannot be an existing element so add a new one
+          elts << Element.new([x.form, y.form])
+          break
+        end
       end
     end
     puts "done"
     gets
   end
-  used_677_on = {}
 end
 
 cex_677_255
