@@ -529,6 +529,15 @@ def simplify_677 lhs, rhs, elts
   #end
 end
 
+def multiplication_table elts
+  elts.each_with_index.map do |x, i|
+    elts.each_with_index.map do |y, j|
+      prod = ev_product(x, y, elts)
+      prod && elts.index(prod)
+    end
+  end
+end
+
 #def assume(elts, inequalities, i, x, y)#, steps: 10)
 #  puts "trying #{elts[i].to_s} = #{x.to_s}*#{y.to_s}"
 #  elts2 = elts.dup #new array, same elements to avoid copying
@@ -614,6 +623,7 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
             return false
           else #no hypotheses, add a new element for the product
             new_elt = Element.new([x.form, y.form])
+            p multiplication_table(elts)
             elts << new_elt
             break
           end
