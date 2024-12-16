@@ -506,17 +506,17 @@ def left_quotient x, y, elts
 end
 
 def simplify_677 lhs, rhs, elts
-  #x = [y, [x, [[y, x], y]]]
+  #x = y(x((yx)y))
   #the lhs and rhs may already be simplified using known information, we now try to simplify them further.
   rhs = simplify_expression(rhs, elts)
   #puts "677: #{lhs} = #{rhs}"
   #the lhs should always be an atom due to the form of 677
-  if atom(rhs)
-    [lhs, rhs]
-  elsif atom(rhs[0])
+  if !atom(rhs) && atom(rhs[0])
     #here we cancel the variable on the left of the RHS, if we have enough information to do so.
     quot = left_quotient(lhs, rhs[0], elts)
     quot ? [quot, rhs[1]] : [lhs, rhs]
+  else
+    [lhs, rhs]
   end
 
   #yx = ev_product(y, x, elts)
