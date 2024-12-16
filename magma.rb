@@ -409,10 +409,24 @@ def normal? x
   x == A || (x[0] == A && normal?(x[1]))
 end
 
+def show_form form, nested=false
+  if atom(form)
+    form.name
+  else
+    inner = "#{show_form(form[0], true)}.#{show_form(form[1], true)}"
+    if nested
+      "(#{inner})"
+    else
+      inner
+    end
+  end
+end
+
 class Element
   attr_accessor :forms
 
   def initialize *forms
+    #forms are symbols or size-2 arrays of forms
     @forms = forms
   end
 
@@ -430,7 +444,7 @@ class Element
   end
 
   def inspect
-    "Elt#{@forms}"
+    "E[#{show_form(form)}]"
   end
 
   def to_s
