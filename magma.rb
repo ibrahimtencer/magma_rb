@@ -561,7 +561,7 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
 
   #should we only add a new element when it's known to be distinct from all the others?
   while 1
-    puts "elements: #{elts}"
+    #puts "elements: #{elts}"
     #puts "elements: #{elts.map(&:forms)}"
     #puts "a*a = #{ev_product(elts[0], elts[0], elts)}"
     #puts "a^2/a = #{left_quotient(elts[1]
