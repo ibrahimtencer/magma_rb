@@ -530,21 +530,12 @@ def simplify_677 lhs, rhs, elts
   #end
 end
 
-def assume(elts, inequalities, i, x, y)#, steps: 10)
-  puts "trying #{elts[i].to_s} = #{x.to_s}*#{y.to_s}"
-  elts2 = elts.dup #new array, same elements to avoid copying
-  elts2[i] = Element.new(*(elts[i].forms + [[x.form, y.form]])) #normal_form?
-  inequalities.each do |lhs, rhs|
-    puts "checking #{lhs} != #{rhs}"
-    sl = simplify_expression(lhs, elts2)
-    sr = simplify_expression(rhs, elts2)
-    if sl.eq?(sr)
-      puts "failed"
-      return false
-    end
-  end
-  return true
-end
+#def assume(elts, inequalities, i, x, y)#, steps: 10)
+#  puts "trying #{elts[i].to_s} = #{x.to_s}*#{y.to_s}"
+#  elts2 = elts.dup #new array, same elements to avoid copying
+#  elts2[i] = Element.new(*(elts[i].forms + [[x.form, y.form]])) #normal_form?
+#  return true
+#end
 
 #x = y(x((yx)y))
 Rhs677 = -> x, y {[y, [x, [[y, x], y]]]}
@@ -586,6 +577,15 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
     p instances_677
     #need to refute a a^2 = a (2-cycle lemma)
     #Pf: if 
+    inequalities.each do |lhs, rhs|
+      puts "checking #{lhs} != #{rhs}"
+      sl = simplify_expression(lhs, elts)
+      sr = simplify_expression(rhs, elts)
+      if sl.eq?(sr)
+        puts "ineq: #{lhs} now equals #{rhs}, contradiction"
+        return false
+      end
+    end
 
     elts.product(elts).each do |x, y|
       if !ev_product(x, y, elts)
@@ -593,12 +593,17 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
         refuted_all = true
         elts.each_with_index do |potential_prod, i|
           #try setting x*y equal to the ith element
-          status = assume(elts, inequalities, i, x, y)
+          hyp = "#{elts[i].to_s} = #{x.to_s}*#{y.to_s}"
+          puts "trying #{hyp}"
+          elts2 = elts.dup #new array, same elements to avoid copying
+          elts2[i] = Element.new(*(elts[i].forms + [[x.form, y.form]])) #normal_form?
+          status = cex_677_255(elts2, inequalities.dup, instances_677.dup)
+
           if status
             refuted_all = false
             #continue to fill in model?
           else
-            puts "refuted"
+            puts "refuted #{hyp}"
             inequalities << [elts[i], [x, y]]
           end
         end
