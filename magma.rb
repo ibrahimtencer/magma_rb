@@ -509,7 +509,7 @@ def simplify_677 lhs, rhs, elts
   #x = [y, [x, [[y, x], y]]]
   #the lhs and rhs may already be simplified using known information, we now try to simplify them further.
   rhs = simplify_expression(rhs, elts)
-  puts "677: #{lhs} = #{rhs}"
+  #puts "677: #{lhs} = #{rhs}"
   #the lhs should always be an atom due to the form of 677
   if atom(rhs)
     [lhs, rhs]
@@ -542,14 +542,7 @@ Rhs677 = -> x, y {[y, [x, [[y, x], y]]]}
 Asym = :A
 A = Element.new(Asym)
 
-#def cex_677_255
-#  elts = [A]
-#  #instances_677 = {}
-#  inequalities = [[A, [[[A, A], A], A]]] #initialize with !255[a]
-#  cex_677_255_sub(elts, inequalities)
-#end
-
-def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_677= {}
+def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_677 = {}, hypothesis = nil
   #we assume a=1 is a counterexample to 255 in a finite 677 magma and try to deduce what the model looks like
   #we try setting products to existing elements and either derive a contradiction or leave it as a possibility.
   #a contradiction means either proving 255[a] or proving that known-distinct elements are equal.
@@ -580,7 +573,7 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
     #need to refute a a^2 = a (2-cycle lemma)
     #Pf: if 
     inequalities.each do |lhs, rhs|
-      puts "checking #{lhs} != #{rhs}"
+      #puts "checking #{lhs} != #{rhs}"
       sl = simplify_expression(lhs, elts)
       sr = simplify_expression(rhs, elts)
       if sl.eq?(sr)
@@ -594,7 +587,8 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
     elts.product(elts).each do |x, y|
       if !ev_product(x, y, elts)
         all_defined = false #needed?
-        puts "", "#{x.to_s}.#{y.to_s} undefined"
+        prods = "#{x}.#{y}"
+        puts "", "#{prods} undefined"
         refuted_all = true
         elts.each_with_index do |potential_prod, i|
           #try setting x*y equal to the ith element
@@ -602,7 +596,7 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
           puts "", "trying #{hyp}"
           elts2 = elts.dup #new array, same elements to avoid copying
           elts2[i] = Element.new(*(elts[i].forms + [[x.form, y.form]])) #normal_form?
-          status = cex_677_255(elts2, inequalities.dup, instances_677.dup)
+          status = cex_677_255(elts2, inequalities.dup, instances_677.dup, hyp)
 
           if status
             puts "worked?"
@@ -614,10 +608,15 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
             inequalities << [elts[i], [x, y]]
           end
         end
-        if refuted_all #it cannot be an existing element so add a new one and start over
-          new_elt = Element.new([x.form, y.form])
-          elts << new_elt
-          break
+        if refuted_all #the product cannot be an existing element
+          if hypothesis #we're working under a hypothesis, so it's now refuted
+            puts "no possible value for #{prods}, refuted #{hypothesis}"
+            return false
+          else #no hypotheses, add a new element for the product
+            new_elt = Element.new([x.form, y.form])
+            elts << new_elt
+            break
+          end
         end
       end
     end
