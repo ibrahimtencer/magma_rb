@@ -550,8 +550,9 @@ Rhs677 = -> x, y {[y, [x, [[y, x], y]]]}
 
 Asym = :A
 A = Element.new(Asym)
+LEVEL = 6
 
-def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_677 = {}, hypothesis = nil
+def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_677 = {}, hypothesis = nil, level = 0
   #we assume a=1 is a counterexample to 255 in a finite 677 magma and try to deduce what the model looks like
   #we try setting products to existing elements and either derive a contradiction or leave it as a possibility.
   #a contradiction means either proving 255[a] or proving that known-distinct elements are equal.
@@ -574,7 +575,7 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
       lhs = find_elt(eq[0], elts)
       rhs = find_elt(eq[1], elts)
       if lhs && rhs && lhs != rhs
-        puts "equates #{lhs} and #{rhs}, contradiction"
+        #puts "equates #{lhs} and #{rhs}, contradiction"
         return false
       end
     end
@@ -586,7 +587,7 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
       sl = simplify_expression(lhs, elts)
       sr = simplify_expression(rhs, elts)
       if sl.eq?(sr)
-        puts "ineq: #{lhs} now equals #{rhs}, contradiction"
+        #puts "ineq: #{lhs} now equals #{rhs}, contradiction"
         return false
       end
     end
@@ -597,15 +598,15 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
       if !ev_product(x, y, elts)
         all_defined = false #needed?
         prods = "#{x}.#{y}"
-        puts "", "#{prods} undefined"
+        puts("", "#{prods} undefined, trying to define (level #{level})") if level < LEVEL
         refuted_all = true
         elts.each_with_index do |potential_prod, i|
           #try setting x*y equal to the ith element
           hyp = "#{x.to_s}*#{y.to_s} = #{elts[i].to_s}"
-          puts "", "trying #{hyp}"
+          #puts "", "trying #{hyp}"
           elts2 = elts.dup #new array, same elements to avoid copying
           elts2[i] = Element.new(*(elts[i].forms + [[x.form, y.form]])) #normal_form?
-          status = cex_677_255(elts2, inequalities.dup, instances_677.dup, hyp)
+          status = cex_677_255(elts2, inequalities.dup, instances_677.dup, hyp, level + 1)
 
           if status
             puts "worked?"
@@ -613,13 +614,13 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
             #refuted_all = false
             #continue to fill in model?
           else
-            puts "refuted #{hyp}"
+            #puts "refuted #{hyp}"
             inequalities << [elts[i], [x, y]]
           end
         end
         if refuted_all #the product cannot be an existing element
           if hypothesis #we're working under a hypothesis, so it's now refuted
-            puts "no possible value for #{prods}, refuted #{hypothesis}"
+            puts "no possible value for #{prods}, refuted #{hypothesis} (level #{level})" if level < LEVEL
             return false
           else #no hypotheses, add a new element for the product
             new_elt = Element.new([x.form, y.form])
@@ -631,6 +632,7 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
       end
     end
 
+    puts; puts
     if new_elt
       puts "added new element: #{new_elt}, now have #{elts.size}"
     elsif all_defined
