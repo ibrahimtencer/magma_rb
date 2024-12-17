@@ -597,10 +597,17 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
     elts.product(elts).each do |x, y|
       if !ev_product(x, y, elts)
         all_defined = false #needed?
-        prods = "#{x}.#{y}"
-        puts("", "#{prods} undefined, trying to define (level #{level})") if level < LEVEL
         refuted_all = true
-        elts.each_with_index do |potential_prod, i|
+        #ensure left-cancellativity
+        possible_prods = elts - (elts - [y]).map {|elt| ev_product(x, elt, elts)}
+        if level < LEVEL
+          prods = "#{x}.#{y}"
+          puts("", "#{prods} undefined, trying to define (level #{level})")
+          puts "possible: #{possible_prods}"
+          puts line_break_array(multiplication_table(elts))
+        end
+        possible_prods.each_with_index do |possible_prod|
+          i = elts.index(possible_prod)
           #try setting x*y equal to the ith element
           hyp = "#{x.to_s}*#{y.to_s} = #{elts[i].to_s}"
           #puts "", "trying #{hyp}"
@@ -624,7 +631,7 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
             return false
           else #no hypotheses, add a new element for the product
             new_elt = Element.new([x.form, y.form])
-            p multiplication_table(elts)
+            puts line_break_array(multiplication_table(elts))
             elts << new_elt
             break
           end
