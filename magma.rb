@@ -408,8 +408,18 @@ def normal? x
   atom(x) || (atom(x[0]) && normal?(x[1]))
 end
 
-def show_form form, nested=false
+def show_normal_form form
   if atom(form)
+    "A"
+  else
+    show_normal_form(form[1]).succ
+  end
+end
+
+def show_form form, nested=false
+  if normal?(form)
+    show_normal_form(form)
+  elsif atom(form)
     form.name
   else
     inner = "#{show_form(form[0], true)}.#{show_form(form[1], true)}"
