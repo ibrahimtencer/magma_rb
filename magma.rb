@@ -253,6 +253,26 @@ def gen_cyclic_tptp n
   axs.join("\n\n")
 end
 
+def auxiliary table
+  #assume that the magma operation is something like a linear one (e.g. an abelian group with two functions acting on it) and calculate the addition operation in the original linear structure associated with the magma
+
+  domain = interval(table.size)
+  poss_zeros = domain.select {|i| injective?(table[i]) && injective?(column(table, i))}
+  if poss_zeros.empty?
+    puts "no possible zeros"
+    return false
+  else
+    puts "possible zeros: #{poss_zeros}", "using first"
+  end
+  z = poss_zeros[0]
+  #left and right multiplication by z:
+  l_z_inv = invert_perm(table[z])
+  r_z_inv = invert_perm(column(table, z))
+
+  #x + y = (Rₑ⁻¹x).(Lₑ⁻¹y)
+  domain.map {|x| domain.map {|y| table[r_z_inv(x)][l_z_inv(y)]}}
+end
+
 def describe table, show_fixpoints=false
   #describe the multiplication table for a 1518 magma
   #assumes that it's given as an array of arrays of numbers in [0, n)
