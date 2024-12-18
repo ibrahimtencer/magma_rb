@@ -512,7 +512,7 @@ end
 
 def left_quotient x, y, elts
   #try to find z such that x = yz, which will be unique assuming that the magma operation is left-cancellative.
-  elts.find {|z| x.eq?(ev_product(y, z, elts))}
+  elts.find {|z| x == ev_product(y, z, elts)} #was eq?
 end
 
 def simplify_677 lhs, rhs, elts
@@ -548,6 +548,10 @@ def multiplication_table elts
   end
 end
 
+def show_instances instances, elts
+  instances.each {|k, v| puts "#{find_elt(k[0], elts)}, #{find_elt(k[1], elts)} : #{v[0]} = #{v[1]}"}
+end
+
 #def assume(elts, inequalities, i, x, y)#, steps: 10)
 #  puts "trying #{elts[i].to_s} = #{x.to_s}*#{y.to_s}"
 #  elts2 = elts.dup #new array, same elements to avoid copying
@@ -560,7 +564,7 @@ Rhs677 = -> x, y {[y, [x, [[y, x], y]]]}
 
 Asym = :A
 A = Element.new(Asym)
-LEVEL = 6
+LEVEL = 6 #the cutoff to do logging
 
 def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_677 = {}, hypothesis = nil, level = 0
   #we assume a=1 is a counterexample to 255 in a finite 677 magma and try to deduce what the model looks like
@@ -573,9 +577,6 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
   #should we only add a new element when it's known to be distinct from all the others?
   while 1
     #puts "elements: #{elts}"
-    #puts "elements: #{elts.map(&:forms)}"
-    #puts "a*a = #{ev_product(elts[0], elts[0], elts)}"
-    #puts "a^2/a = #{left_quotient(elts[1]
     #construct and simplify 677 instances
     elts.product(elts).each do |x, y|
       i = [x.form, y.form]
@@ -590,8 +591,6 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
       end
     end
     #p instances_677
-    #need to refute a a^2 = a (2-cycle lemma)
-    #Pf: if 
     inequalities.each do |lhs, rhs|
       #puts "checking #{lhs} != #{rhs}"
       sl = simplify_expression(lhs, elts)
@@ -613,6 +612,7 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
         if level < LEVEL
           prods = "#{x}.#{y}"
           puts("", "#{prods} undefined, trying to define (level #{level})")
+          show_instances(instances_677, elts)
           puts "possible: #{possible_prods}"
           puts line_break_array(multiplication_table(elts))
         end
@@ -637,7 +637,11 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
         end
         if refuted_all #the product cannot be an existing element
           if hypothesis #we're working under a hypothesis, so it's now refuted
-            puts "no possible value for #{prods}, refuted #{hypothesis} (level #{level})" if level < LEVEL
+            if level < LEVEL
+              #puts line_break_array(multiplication_table(elts))
+              show_instances(instances_677, elts)
+              puts "no possible value for #{prods}, refuted #{hypothesis} (level #{level})"
+            end
             return false
           else #no hypotheses, add a new element for the product
             new_elt = Element.new([x.form, y.form])
@@ -662,7 +666,6 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
   end
 end
 
-cex_677_255
 
 #usage:
 #describe(fmb_to_array("..."))
