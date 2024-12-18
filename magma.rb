@@ -268,7 +268,7 @@ def auxiliary table
   r_z_inv = invert_perm(column(table, z))
 
   #x + y = (Rₑ⁻¹x).(Lₑ⁻¹y)
-  domain.map {|x| domain.map {|y| table[r_z_inv(x)][l_z_inv(y)]}}
+  domain.map {|x| domain.map {|y| table[r_z_inv[x]][l_z_inv[y]]}}
 end
 
 def describe table, show_fixpoints=false
