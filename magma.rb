@@ -12,6 +12,7 @@ end
 def invert_perm perm
   res = []
   perm.each_with_index.map {|x, i| res[x] = i}
+  res
 end
 
 def inverse x, modulus
