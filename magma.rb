@@ -130,9 +130,6 @@ def search_linear antecedent = 677, cons = [255], upto: 20, describe: false, des
   end
 end
 
-def completions table
-end
-
 def find_such_that modulus, &blk
   blk.call
 end
@@ -198,7 +195,8 @@ def nice_fmb_to_array str
 end
 
 def cycles perm, show_fixpoints=false
-  #gives the cycles of a permutation (array of numbers), as an array of arrays
+  #gives the cycles of a permutation (array of numbers in 0...len), as an array of arrays
+  #will go into an infinite loop if it's not a bijection
   res = []
   current = [0]
   while 1
@@ -438,6 +436,7 @@ def normal? x
 end
 
 def show_normal_form form
+  #we name left powers of A as A, B, C, D...
   if atom(form)
     "A"
   else
