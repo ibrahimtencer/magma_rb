@@ -260,12 +260,16 @@ def auxiliary table
     puts "no possible zeros"
     return false
   else
-    puts "possible zeros: #{poss_zeros}", "using first"
+    puts "possible zeros: #{poss_zeros}", "using first: #{poss_zeros[0]}"
   end
   z = poss_zeros[0]
   #left and right multiplication by z:
+  puts "l_z: #{table[z]}"
+  puts "r_z: #{column(table, z)}"
   l_z_inv = invert_perm(table[z])
   r_z_inv = invert_perm(column(table, z))
+  puts "L_z^-1: #{l_z_inv}"
+  puts "R_z^-1: #{r_z_inv}"
 
   #x + y = (Rₑ⁻¹x).(Lₑ⁻¹y)
   domain.map {|x| domain.map {|y| table[r_z_inv[x]][l_z_inv[y]]}}
