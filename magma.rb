@@ -185,13 +185,12 @@ def fmb_to_array(str)
 end
 
 def line_break_array(ar)
-  "[#{ar.map(&:to_s).join(",\n")}]"
+  puts "[#{ar.map(&:to_s).join(",\n")}]"
+  ar
 end
 
 def nice_fmb_to_array str
-  ar = fmb_to_array(str)
-  puts line_break_array(ar)
-  ar
+  line_break_array(fmb_to_array(str))
 end
 
 def cycles perm, show_fixpoints=false
