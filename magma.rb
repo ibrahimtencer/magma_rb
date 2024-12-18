@@ -251,28 +251,88 @@ def gen_cyclic_tptp n
   axs.join("\n\n")
 end
 
+def satisfies?(table, &law)
+  domain = interval(table.size)
+  domain.product(domain).all?(&law)
+end
+
+def commutative? table
+  domain = interval(table.size)
+  domain.product(domain).all? {|x, y| table[x][y] == table[y][x]}
+end
+
+def associative? table
+  domain = interval(table.size)
+  domain.product(domain).product(domain).all? do |(x, y), z|
+    table[x][table[y][z]] == table[table[x][y]][z]
+  end
+end
+
 def auxiliary table
   #assume that the magma operation is something like a linear one (e.g. an abelian group with two functions acting on it) and calculate the addition operation in the original linear structure associated with the magma
 
   domain = interval(table.size)
-  poss_zeros = domain.select {|i| injective?(table[i]) && injective?(column(table, i))}
+  puts "size: #{table.size}"
+  #the zero must be idempotent, and its left and right multiplication operations must be invertible for this construction to work
+  poss_zeros = domain.select {|i| injective?(table[i]) && injective?(column(table, i)) && table[i][i] == i}
   if poss_zeros.empty?
     puts "no possible zeros"
     return false
   else
-    puts "possible zeros: #{poss_zeros}", "using first: #{poss_zeros[0]}"
+    puts "trying possible zeros (#{poss_zeros.size}): #{poss_zeros}"
   end
-  z = poss_zeros[0]
-  #left and right multiplication by z:
-  puts "l_z: #{table[z]}"
-  puts "r_z: #{column(table, z)}"
-  l_z_inv = invert_perm(table[z])
-  r_z_inv = invert_perm(column(table, z))
-  puts "L_z^-1: #{l_z_inv}"
-  puts "R_z^-1: #{r_z_inv}"
+  poss_zeros.map do |z|
+    #left and right multiplication by z:
+    l_z = table[z]
+    r_z = column(table, z)
+    l_z_inv = invert_perm(l_z)
+    r_z_inv = invert_perm(r_z)
+    #puts "L_z^-1: #{l_z_inv}"
+    #puts "R_z^-1: #{r_z_inv}"
 
-  #x + y = (Rₑ⁻¹x).(Lₑ⁻¹y)
-  domain.map {|x| domain.map {|y| table[r_z_inv[x]][l_z_inv[y]]}}
+    #x + y = (Rₑ⁻¹x).(Lₑ⁻¹y)
+    #give the table for + along with the two functions
+    tab2 = domain.map {|x| domain.map {|y| table[r_z_inv[x]][l_z_inv[y]]}}
+    assoc = associative?(tab2)
+    comm = commutative?(tab2)
+    if assoc && comm
+      :ac
+    elsif assoc
+      :a
+    elsif comm
+      :c
+    else
+      :n
+    end
+    #puts(if assoc && comm
+    #       "candidate!"
+    #     elsif assoc
+    #       "just assoc"
+    #     elsif comm
+    #       "just comm"
+    #     else
+    #       "neither"
+    #     end)
+    #[tab2, r_z, l_z]
+  end
+end
+
+def analyze_extensions
+  tables = []
+  current_table = []
+  #346 tables
+  File.new("677_probably_nonlinear.txt").each_line do |line|
+    if line =~ /(\d+\s*)+/
+      current_table << line.split.map(&:to_i)
+    elsif line =~ /=+/
+      tables << current_table
+      current_table = []
+    end
+  end
+  tables.each do |table|
+    p auxiliary(table)
+  end
+  1
 end
 
 def describe table, show_fixpoints=false
@@ -369,6 +429,18 @@ Shom13 = [[0, 5, 4, 8, 10, 11, 3, 2, 9, 1, 6, 12, 7],
 [0, 8, 5, 2, 1, 3, 4, 11, 7, 10, 12, 6, 9],
 [0, 6, 9, 12, 11, 10, 7, 1, 4, 3, 2, 8, 5],
 [0, 8, 5, 2, 1, 3, 4, 11, 7, 10, 12, 6, 9]]
+
+#677 models
+
+Ord9_677 = [[0, 5, 6, 7, 8, 2, 3, 4, 1],
+ [1, 2, 4, 6, 5, 8, 0, 7, 3],
+ [2, 6, 3, 1, 7, 4, 5, 0, 8],
+ [3, 8, 7, 4, 2, 5, 1, 6, 0],
+ [4, 3, 5, 8, 1, 0, 6, 2, 7],
+ [5, 7, 1, 0, 4, 6, 8, 3, 2],
+ [6, 1, 8, 2, 0, 3, 7, 5, 4],
+ [7, 0, 2, 5, 3, 1, 4, 8, 6],
+ [8, 4, 0, 3, 6, 7, 2, 1, 5]]
 
 Ord25_677 = [[1, 2, 3, 4, 5, 6, 0, 28, 29, 30, 31, 32, 33, 34, 21, 22, 23, 24, 25, 26, 27, 14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13],
 [5, 6, 0, 1, 2, 3, 4, 32, 33, 34, 28, 29, 30, 31, 25, 26, 27, 21, 22, 23, 24, 18, 19, 20, 14, 15, 16, 17, 11, 12, 13, 7, 8, 9, 10],
