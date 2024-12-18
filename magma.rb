@@ -428,6 +428,11 @@ def test_all_cyclic m=1, n=5000
   end
 end
 
+
+#########################################
+### FINITE MODEL BUILDER FOR 677=>255 ###
+#########################################
+
 def normal? x
   #normal form is a, aa, a(aa), a(a(aa)) i.e. left powers
   #x == A || (x[0] == A && normal?(x[1]))
