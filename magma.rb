@@ -9,10 +9,45 @@ def linear_array a, b, modulus
   (0...modulus).map {|x| (0...modulus).map {|y| (a*x + b*y) % modulus}}
 end
 
+def invert_perm perm
+  res = []
+  perm.each_with_index.map {|x, i| res[x] = i}
+end
+
 def inverse x, modulus
   (1...modulus).each do |i|
     return i if (i * x) % modulus == 1
   end
+end
+
+def table_to_values table
+  domain = interval(table.size)
+  domain.product(domain).map {|i, j| [[i, j], table[i][j]]}.to_h
+end
+
+def interval n
+  (0...n).to_a
+end
+
+def renumber table, ar
+  #renumber the elements according to array of numbers ar
+  #could also use the inverse permutation (ar[x], ar[y])
+  vals = table_to_values(table)
+  vals = vals.map {|(x, y), out| [[ar.index(x), ar.index(y)], ar.index(out)]}.to_h
+  table_from_values(vals)
+end
+
+def column table, i
+  table.map {|row| row[i]}
+end
+
+def transpose table
+  domain = interval(table.size)
+  domain.map {|i| column(table, i)}
+end
+
+def injective? seq
+  seq.uniq == seq
 end
 
 Expx = -> f, x, y {x}
@@ -216,32 +251,6 @@ def gen_cyclic_tptp n
          #"fof(s3, conjecture,\n  0 = 3\n).",
   ]
   axs.join("\n\n")
-end
-
-def table_to_values table
-  domain = interval(table.size)
-  domain.product(domain).map {|i, j| [[i, j], table[i][j]]}.to_h
-end
-
-def interval n
-  (0...n).to_a
-end
-
-def renumber table, ar
-  #renumber the elements according to array of numbers ar
-  #could also use the inverse permutation (ar[x], ar[y])
-  vals = table_to_values(table)
-  vals = vals.map {|(x, y), out| [[ar.index(x), ar.index(y)], ar.index(out)]}.to_h
-  table_from_values(vals)
-end
-
-def transpose table
-  domain = interval(table.size)
-  domain.map {|i| table.map {|row| row[i]}}
-end
-
-def injective? seq
-  seq.uniq == seq
 end
 
 def describe table, show_fixpoints=false
