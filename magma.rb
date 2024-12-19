@@ -356,7 +356,7 @@ def analyze_extensions
   tables = []
   current_table = []
   #346 tables
-  #takes < 27 min
+  #takes ~20 min
   File.new("677_probably_nonlinear.txt").each_line do |line|
     if line =~ /\A(\d+\s*)+\z/
     #if line =~ /\A(\d+\s+)+\d+\z/
