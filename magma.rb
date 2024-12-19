@@ -39,6 +39,16 @@ def interval n
   (0...n).to_a
 end
 
+def subset? ar1, ar2
+  ar1.to_set.subset?(ar2.to_set)
+end
+
+def valid_table? table
+  n = table.size
+  domain = interval(n)
+  table.all? {|row| row.is_a?(Array) && row.size == n && subset?(row, domain)}
+end
+
 def renumber table, ar
   #renumber the elements according to array of numbers ar
   #could also use the inverse permutation (ar[x], ar[y])
@@ -77,6 +87,16 @@ def associative? table
   domain.product(domain).product(domain).all? do |(x, y), z|
     table[x][table[y][z]] == table[table[x][y]][z]
   end
+end
+
+def left_cancellative? table
+  domain = interval(table.size)
+  domain.all? {|x| injective?(table[x])}
+end
+
+def right_cancellative? table
+  #could be optimized
+  left_cancellative?(transpose(table))
 end
 
 Expx = -> f, x, y {x}
@@ -338,13 +358,21 @@ def analyze_extensions
   #346 tables
   #takes < 27 min
   File.new("677_probably_nonlinear.txt").each_line do |line|
-    if line =~ /(\d+\s*)+/
-      current_table << line.split.map(&:to_i)
+    if line =~ /\A(\d+\s*)+\z/
+    #if line =~ /\A(\d+\s+)+\d+\z/
+      is = line.split.map(&:to_i)
+      current_table << is if is.size > 1
     elsif line =~ /=+/
       tables << current_table
       current_table = []
     end
   end
+  #tns = 0...(tables.size)
+  puts "#{tables.size} tables"
+  puts "sizes: #{tables.map(&:size)}"
+  puts "all valid" if tables.all? {|t| valid_table?(t)}
+  puts "all left cancellative" if tables.all? {|t| left_cancellative?(t)}
+  puts "all right cancellative" if tables.all? {|t| right_cancellative?(t)}
   tables.map do |table|
     p linear_auxiliary(table)
   end
