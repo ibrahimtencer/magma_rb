@@ -1,21 +1,30 @@
 #!/usr/bin/env ruby
 require 'prime'
 
+###############################
+### General utility methods ###
+###############################
+
 def linear a, b, modulus
+  #a linear magma operation in Z/(modulus)Z
   -> x, y {(a*x + b*y) % modulus}
 end
 
-def linear_array a, b, modulus
-  (0...modulus).map {|x| (0...modulus).map {|y| (a*x + b*y) % modulus}}
+def linear_table a, b, modulus
+  #give the multiplication table for a linear magma
+  f = linear(a, b, modulus)
+  (0...modulus).map {|x| (0...modulus).map {|y| f[x, y]}}
 end
 
 def invert_perm perm
+  #invert an array of integers seen as a permutation
   res = []
   perm.each_with_index.map {|x, i| res[x] = i}
   res
 end
 
 def inverse x, modulus
+  #find the inverse of x mod modulus using brute force
   (1...modulus).each do |i|
     return i if (i * x) % modulus == 1
   end
@@ -43,12 +52,31 @@ def column table, i
 end
 
 def transpose table
+  #return the opposite operation: x *' y = y * x
   domain = interval(table.size)
   domain.map {|i| column(table, i)}
 end
 
 def injective? seq
+  #interprets an array as a function on integers
   seq.uniq == seq
+end
+
+def satisfies?(table, &law)
+  domain = interval(table.size)
+  domain.product(domain).all?(&law)
+end
+
+def commutative? table
+  domain = interval(table.size)
+  domain.product(domain).all? {|x, y| table[x][y] == table[y][x]}
+end
+
+def associative? table
+  domain = interval(table.size)
+  domain.product(domain).product(domain).all? do |(x, y), z|
+    table[x][table[y][z]] == table[table[x][y]][z]
+  end
 end
 
 Expx = -> f, x, y {x}
@@ -68,6 +96,7 @@ Equations =
   }
 
 def b_candidate? eqn, b, modulus
+  #whether b is a candidate for the second coefficient in a linear magma
   case eqn
   when 1518
     #(1 - b³)² + b² - b⁵ + b³(1 - b³) = 0
@@ -79,6 +108,7 @@ def b_candidate? eqn, b, modulus
 end
 
 def b_candidates eqn, modulus
+  #find candidates for the second coefficient in a linear magma using brute force
   (0...modulus).select {|n| b_candidate?(eqn, n, modulus)}
 end
 
@@ -90,21 +120,23 @@ def check op, eqn, lhs_fn, rhs_fn, x, y
   end
 end
 
-def calc_a eqn, b, m
-  #m is the modulus
+def calc_a eqn, b, modulus
+  #calculate a from b
   case eqn
   when 1518
-    b_inv = inverse(b, m) #(m + 1)/b
-    ((1 - b*b*b) * b_inv) % m
+    b_inv = inverse(b, modulus) #(modulus + 1)/b
+    ((1 - b*b*b) * b_inv) % modulus
   when 677
     #a = 1/b(1 + b²)
-    (inverse(b, m) * inverse(1 + b*b, m)) % m
+    (inverse(b, modulus) * inverse(1 + b*b, modulus)) % modulus
   end
 end
 
 $none = []
 
 def search_linear antecedent = 677, cons = [255], upto: 20, describe: false, describe_op: false
+  #generate linear models for an equation
+  #cons is the consequents
   Prime.each do |m|
     return if m > upto
     bcand = b_candidates(antecedent, m)
@@ -125,8 +157,9 @@ def search_linear antecedent = 677, cons = [255], upto: 20, describe: false, des
         end
       end
 
-      describe(linear_array(a, b, m)) if describe
-      describe(transpose(linear_array(a, b, m))) if describe_op
+      table = linear_table(a, b, m)
+      describe(table) if describe
+      describe(transpose(table)) if describe_op
     end
   end
 end
@@ -186,6 +219,7 @@ def fmb_to_array(str)
 end
 
 def line_break_array(ar)
+  #output a multiplication table as a square grid
   puts "[#{ar.map(&:to_s).join(",\n")}]"
   ar
 end
@@ -251,25 +285,14 @@ def gen_cyclic_tptp n
   axs.join("\n\n")
 end
 
-def satisfies?(table, &law)
-  domain = interval(table.size)
-  domain.product(domain).all?(&law)
-end
-
-def commutative? table
-  domain = interval(table.size)
-  domain.product(domain).all? {|x, y| table[x][y] == table[y][x]}
-end
-
-def associative? table
-  domain = interval(table.size)
-  domain.product(domain).product(domain).all? do |(x, y), z|
-    table[x][table[y][z]] == table[table[x][y]][z]
-  end
-end
-
-def auxiliary table
-  #assume that the magma operation is something like a linear one (e.g. an abelian group with two functions acting on it) and calculate the addition operation in the original linear structure associated with the magma
+def linear_auxiliary table
+  #Assume that the magma operation is something like a cancellative linear one and calculate the addition operation in the original linear structure associated with the magma.
+  #More specifically we assume that we have a cancellative magma N with identity 0 and two invertible functions that preserve 0, and that the operation . on M is defined as
+  #  x.y = f(x) + g(y)
+  #Then M will be cancellative and 0 will be idempotent in M.
+  #We recover the operation + from M via
+  #  (R₀⁻¹x).(L₀⁻¹y) = f(f⁻¹(x)) + g(g⁻¹(y)) = x + y
+  #and determine whether it is associative and commutative.
 
   domain = interval(table.size)
   puts "size: #{table.size}"
@@ -307,12 +330,13 @@ def auxiliary table
     #[tab2, r_z, l_z]
   end.tally
 end
-#takes < 27 min
 
 def analyze_extensions
+  #analyzes cohomological extensions of linear 677 magmas - are they linear?
   tables = []
   current_table = []
   #346 tables
+  #takes < 27 min
   File.new("677_probably_nonlinear.txt").each_line do |line|
     if line =~ /(\d+\s*)+/
       current_table << line.split.map(&:to_i)
@@ -322,12 +346,12 @@ def analyze_extensions
     end
   end
   tables.map do |table|
-    p auxiliary(table)
+    p linear_auxiliary(table)
   end
 end
 
 def describe table, show_fixpoints=false
-  #describe the multiplication table for a 1518 magma
+  #describe the multiplication table for a 1518 or other magma (but works best when L_x is bijective and there are repeated L_x's)
   #assumes that it's given as an array of arrays of numbers in [0, n)
   #describe(fmb_to_array("..."))
   n = table.size
@@ -354,7 +378,7 @@ end
 
 #[Shom8, Shom9, Shom10, Shom11, Shom12, Shom13].each {|tab| describe(tab); puts}
 
-Corr = [0] + "1 5 11 12 7 2 4 10 6 3 8 9".split.map(&:to_i)
+#Corr = [0] + "1 5 11 12 7 2 4 10 6 3 8 9".split.map(&:to_i)
 
 #if x = ARGV[0]
 #  n = x.to_i
@@ -383,6 +407,10 @@ end
 #########################################
 ### FINITE MODEL BUILDER FOR 677=>255 ###
 #########################################
+
+def atom x
+  !x.is_a?(Array)
+end
 
 def normal? x
   #normal form is a, aa, a(aa), a(a(aa)) i.e. left powers
@@ -461,13 +489,9 @@ def find_elt x, elts
 end
 
 def ev_product x, y, elts
-  #x and y elements
+  #evaluate the product x*y, x and y elements
   #elts.find {|elt| elt.eq?([x.form, y.form])}
   find_elt([x.form, y.form], elts)
-end
-
-def atom x
-  !x.is_a?(Array)
 end
 
 def simplify_expression expr, elts
@@ -476,18 +500,12 @@ def simplify_expression expr, elts
     expr
   else
     x, y = expr
-    #puts "simp #{x.to_s}, #{y.to_s}, #{x.class} #{y.class}"
     if atom(x) && atom(y)
-      #puts "atom #{x.to_s} #{y.to_s} #{x.class} #{y.class}"
-      #puts "elts #{elts}"
       prod = ev_product(x, y, elts)
-      #puts "prod #{prod}"
       ev_product(x, y, elts) || expr
     else
-      #puts "nonatom #{x.to_s} / #{y.to_s}"
       x2 = simplify_expression(x, elts)
       y2 = simplify_expression(y, elts)
-      #puts "simped #{x2.to_s} #{y2.to_s}"
       (atom(x2) && atom(y2) && ev_product(x2, y2, elts)) || [x2, y2]
     end
   end
@@ -500,7 +518,8 @@ end
 
 def simplify_677 lhs, rhs, elts
   #x = y(x((yx)y))
-  #the lhs and rhs may already be simplified using known information, we now try to simplify them further.
+  #We take an instance of 677 and try to simplify it using known products and left-cancellativity.
+  #The lhs and rhs may already be simplified, we try to simplify them further.
   rhs = simplify_expression(rhs, elts)
   #puts "677: #{lhs} = #{rhs}"
   #the lhs should always be an atom due to the form of 677
@@ -523,6 +542,7 @@ def simplify_677 lhs, rhs, elts
 end
 
 def multiplication_table elts
+  #the multiplication table so far (with nils for undefined products)
   elts.each_with_index.map do |x, i|
     elts.each_with_index.map do |y, j|
       prod = ev_product(x, y, elts)
@@ -532,6 +552,7 @@ def multiplication_table elts
 end
 
 def show_instances instances, elts
+  #print the instances of 677
   instances.each {|k, v| puts "#{find_elt(k[0], elts)}, #{find_elt(k[1], elts)} : #{v[0]} = #{v[1]}"}
 end
 
@@ -550,14 +571,14 @@ A = Element.new(Asym)
 LEVEL = 6 #the cutoff to do logging
 
 def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_677 = {}, hypothesis = nil, level = 0
-  #we assume a=1 is a counterexample to 255 in a finite 677 magma and try to deduce what the model looks like
-  #we try setting products to existing elements and either derive a contradiction or leave it as a possibility.
-  #a contradiction means either proving 255[a] or proving that known-distinct elements are equal.
+  #We assume A is a counterexample to 255 in a finite 677 magma and try to deduce what the model looks like.
+  #We try setting products to existing elements and either derive a contradiction or leave it as a possibility.
+  #A contradiction means either proving 255[a] or proving that known-distinct elements are equal.
+  #Currently we assume the model has A as generator and also consists of the first n left powers of A, so this is not an exhaustive search of any order past 2. But we could add new elements in other ways.
 
   #x = ((xx)x)x = (x²x)x
   #rhs255 = -> x {[[[x, x], x], x]}
 
-  #should we only add a new element when it's known to be distinct from all the others?
   while 1
     #puts "elements: #{elts}"
     #construct and simplify 677 instances
