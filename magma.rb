@@ -320,7 +320,7 @@ def linear_auxiliary table
   poss_zeros = domain.select {|i| injective?(table[i]) && injective?(column(table, i)) && table[i][i] == i}
   if poss_zeros.empty?
     #puts "no possible zeros"
-    return :nz
+    return nil
   #else
   #  puts "trying possible zeros (#{poss_zeros.size}): #{poss_zeros}"
   end
@@ -335,28 +335,15 @@ def linear_auxiliary table
 
     #x + y = (Rₑ⁻¹x).(Lₑ⁻¹y)
     #give the table for + along with the two functions
-    tab2 = domain.map {|x| domain.map {|y| table[r_z_inv[x]][l_z_inv[y]]}}
-    assoc = associative?(tab2)
-    comm = commutative?(tab2)
-    if assoc && comm
-      :ac
-    elsif assoc
-      :a
-    elsif comm
-      :c
-    else
-      :n
-    end
-    #[tab2, r_z, l_z]
-  end.tally
+    tab = domain.map {|x| domain.map {|y| table[r_z_inv[x]][l_z_inv[y]]}}
+    [tab, r_z, l_z]
+  end
 end
 
-def analyze_extensions
-  #analyzes cohomological extensions of linear 677 magmas - are they linear?
+def parse_extensions
   tables = []
   current_table = []
   #346 tables
-  #takes ~20 min
   File.new("677_probably_nonlinear.txt").each_line do |line|
     if line =~ /\A(\d+\s*)+\z/
     #if line =~ /\A(\d+\s+)+\d+\z/
@@ -367,14 +354,40 @@ def analyze_extensions
       current_table = []
     end
   end
+
+  tables
+end
+
+def analyze_extensions
+  #analyzes cohomological extensions of linear 677 magmas - are they linear?
   #tns = 0...(tables.size)
+  #takes ~20 min
+  tables = parse_extensions()
   puts "#{tables.size} tables"
   puts "sizes: #{tables.map(&:size)}"
   puts "all valid" if tables.all? {|t| valid_table?(t)}
   puts "all left cancellative" if tables.all? {|t| left_cancellative?(t)}
   puts "all right cancellative" if tables.all? {|t| right_cancellative?(t)}
   tables.map do |table|
-    p linear_auxiliary(table)
+    res = linear_auxiliary(table)
+
+    if res
+      res.map do |tab, r, l|
+        assoc = associative?(tab)
+        comm = commutative?(tab)
+        if assoc && comm
+          :ac
+        elsif assoc
+          :a
+        elsif comm
+          :c
+        else
+          :n
+        end
+      end.tally
+    else
+      :nz
+    end
   end
 end
 
