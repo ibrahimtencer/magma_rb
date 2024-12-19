@@ -99,9 +99,9 @@ def right_cancellative? table
   left_cancellative?(transpose(table))
 end
 
-Expx = -> f, x, y {x}
+Expx ||= -> f, x, y {x}
 
-Equations =
+Equations ||=
   {1518 => [Expx, -> f, x, y {f[f[y, y], f[x, f[y, x]]]}],
    #x = x(x(xx)) = x(xx²)
    47 => [Expx, -> f, x, y {f[x, f[x, f[x, x]]]}],
@@ -592,11 +592,11 @@ end
 #end
 
 #x = y(x((yx)y))
-Rhs677 = -> x, y {[y, [x, [[y, x], y]]]}
+Rhs677 ||= -> x, y {[y, [x, [[y, x], y]]]}
 
-Asym = :A
-A = Element.new(Asym)
-LEVEL = 6 #the cutoff to do logging
+Asym ||= :A
+A ||= Element.new(Asym)
+LEVEL ||= 6 #the cutoff to do logging
 
 def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_677 = {}, hypothesis = nil, level = 0
   #We assume A is a counterexample to 255 in a finite 677 magma and try to deduce what the model looks like.
