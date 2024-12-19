@@ -99,6 +99,23 @@ def right_cancellative? table
   left_cancellative?(transpose(table))
 end
 
+def identity table
+  #left identity if it exists
+  domain = interval(table.size)
+  domain.find {|x| domain.all? {|y| table[x][y] == y}}
+end
+
+def inverses? table
+  #has right inverses
+  e = identity(table)
+  if e
+    domain = interval(table.size)
+    domain.all? {|x| domain.any? {|y| table[x][y] == e}}
+  else
+    puts "no identity"
+  end
+end
+
 Expx ||= -> f, x, y {x}
 
 Equations ||=
