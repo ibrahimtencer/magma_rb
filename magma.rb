@@ -276,10 +276,10 @@ def auxiliary table
   #the zero must be idempotent, and its left and right multiplication operations must be invertible for this construction to work
   poss_zeros = domain.select {|i| injective?(table[i]) && injective?(column(table, i)) && table[i][i] == i}
   if poss_zeros.empty?
-    puts "no possible zeros"
-    return false
-  else
-    puts "trying possible zeros (#{poss_zeros.size}): #{poss_zeros}"
+    #puts "no possible zeros"
+    return :nz
+  #else
+  #  puts "trying possible zeros (#{poss_zeros.size}): #{poss_zeros}"
   end
   poss_zeros.map do |z|
     #left and right multiplication by z:
@@ -304,18 +304,10 @@ def auxiliary table
     else
       :n
     end
-    #puts(if assoc && comm
-    #       "candidate!"
-    #     elsif assoc
-    #       "just assoc"
-    #     elsif comm
-    #       "just comm"
-    #     else
-    #       "neither"
-    #     end)
     #[tab2, r_z, l_z]
-  end
+  end.tally
 end
+#takes < 27 min
 
 def analyze_extensions
   tables = []
@@ -329,10 +321,9 @@ def analyze_extensions
       current_table = []
     end
   end
-  tables.each do |table|
+  tables.map do |table|
     p auxiliary(table)
   end
-  1
 end
 
 def describe table, show_fixpoints=false
