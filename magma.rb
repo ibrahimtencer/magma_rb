@@ -305,7 +305,7 @@ def gen_cyclic_tptp n
   axs.join("\n\n")
 end
 
-def linear_auxiliary table
+def linear_auxiliary table, &blk
   #Assume that the magma operation is something like a cancellative linear one and calculate the addition operation in the original linear structure associated with the magma.
   #More specifically we assume that we have a cancellative magma N with identity 0 and two invertible functions that preserve 0, and that the operation . on M is defined as
   #  x.y = f(x) + g(y)
@@ -313,6 +313,8 @@ def linear_auxiliary table
   #We recover the operation + from M via
   #  (R₀⁻¹x).(L₀⁻¹y) = f(f⁻¹(x)) + g(g⁻¹(y)) = x + y
   #and determine whether it is associative and commutative.
+
+  #we take a block for processing because some of the magmas are huge and also idempotent so they would generate an auxiliary magma for every element
 
   domain = interval(table.size)
   puts "size: #{table.size}"
@@ -324,6 +326,7 @@ def linear_auxiliary table
   #else
   #  puts "trying possible zeros (#{poss_zeros.size}): #{poss_zeros}"
   end
+  processor = blk || -> x {x}
   poss_zeros.map do |z|
     #left and right multiplication by z:
     l_z = table[z]
@@ -336,7 +339,7 @@ def linear_auxiliary table
     #x + y = (Rₑ⁻¹x).(Lₑ⁻¹y)
     #give the table for + along with the two functions
     tab = domain.map {|x| domain.map {|y| table[r_z_inv[x]][l_z_inv[y]]}}
-    [tab, r_z, l_z]
+    blk[tab, r_z, l_z]
   end
 end
 
