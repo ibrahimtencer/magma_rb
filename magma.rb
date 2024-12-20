@@ -743,3 +743,6 @@ end
 #describe(fmb_to_array("..."))
 #renumber(table, Corr)
 #./magma.rb 24 | vampire -sa fmb -fmbss 1 -t 0
+
+#tabs = parse_extensions; Pseudolinear677 = [tabs[0], tabs[98], tabs[240]] #also in magma_tables.rb
+#Pseudolinear677.each {|m| linear_auxiliary(m) {|t, r, l| puts associative?(t); puts commutative?(t); puts homomorphism?(r, t); puts homomorphism?(l, t); puts}}
