@@ -106,14 +106,21 @@ def identity table
 end
 
 def inverses? table
-  #has right inverses
+  #does it have two-sided inverses?
   e = identity(table)
   if e
+    #return the identity if it has inverses
     domain = interval(table.size)
-    domain.all? {|x| domain.any? {|y| table[x][y] == e}}
+    domain.all? {|x| domain.any? {|y| table[x][y] == e && table[y][x] == e}} && e
   else
     puts "no identity"
   end
+end
+
+def homomorphism? seq, table
+  #seq is a function given as an array of numbers, we return whether it is a homomorphism wrt the multiplication table
+  domain = interval(table.size)
+  domain.product(domain).all? {|x, y| seq[table[x][y]] == table[seq[x]][seq[y]]}
 end
 
 Expx ||= -> f, x, y {x}
