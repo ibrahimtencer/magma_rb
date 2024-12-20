@@ -363,7 +363,7 @@ def linear_auxiliary table, &blk
     #x + y = (Rₑ⁻¹x).(Lₑ⁻¹y)
     #give the table for + along with the two functions
     tab = domain.map {|x| domain.map {|y| table[r_z_inv[x]][l_z_inv[y]]}}
-    blk[tab, r_z, l_z]
+    blk[tab, l_z, r_z]
   end
 end
 
@@ -745,4 +745,4 @@ end
 #./magma.rb 24 | vampire -sa fmb -fmbss 1 -t 0
 
 #tabs = parse_extensions; Pseudolinear677 = [tabs[0], tabs[98], tabs[240]] #also in magma_tables.rb
-#Pseudolinear677.each {|m| linear_auxiliary(m) {|t, r, l| puts associative?(t); puts commutative?(t); puts homomorphism?(r, t); puts homomorphism?(l, t); puts}}
+#Pseudolinear677.each {|m| linear_auxiliary(m) {|t, l, r| puts associative?(t); puts commutative?(t); puts homomorphism?(r, t); puts homomorphism?(l, t); puts}}
