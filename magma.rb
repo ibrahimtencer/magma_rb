@@ -123,6 +123,18 @@ def homomorphism? seq, table
   domain.product(domain).all? {|x, y| seq[table[x][y]] == table[seq[x]][seq[y]]}
 end
 
+def idempotent? table
+  interval(table.size).all? {|i| table[i][i] == i}
+end
+
+def fixpoints seq
+  seq.each_with_index.select {|x, i| x == i}
+end
+
+def unique_fixpoint_of_L? table
+  table.all? {|row| fixpoints(row).size == 1}
+end
+
 Expx ||= -> f, x, y {x}
 
 Equations ||=
