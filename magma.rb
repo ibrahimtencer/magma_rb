@@ -5,6 +5,10 @@ require 'prime'
 ### General utility methods ###
 ###############################
 
+def domain table
+  interval(table.size)
+end
+
 def linear a, b, modulus
   #a linear magma operation in Z/(modulus)Z
   -> x, y {(a*x + b*y) % modulus}
@@ -31,8 +35,8 @@ def inverse x, modulus
 end
 
 def table_to_values table
-  domain = interval(table.size)
-  domain.product(domain).map {|i, j| [[i, j], table[i][j]]}.to_h
+  dom = domain(table)
+  dom.product(dom).map {|i, j| [[i, j], table[i][j]]}.to_h
 end
 
 def interval n
@@ -45,8 +49,8 @@ end
 
 def valid_table? table
   n = table.size
-  domain = interval(n)
-  table.all? {|row| row.is_a?(Array) && row.size == n && subset?(row, domain)}
+  dom = interval(n)
+  table.all? {|row| row.is_a?(Array) && row.size == n && subset?(row, dom)}
 end
 
 def renumber table, ar
@@ -63,8 +67,7 @@ end
 
 def transpose table
   #return the opposite operation: x *' y = y * x
-  domain = interval(table.size)
-  domain.map {|i| column(table, i)}
+  domain(table).map {|i| column(table, i)}
 end
 
 def injective? seq
@@ -73,25 +76,24 @@ def injective? seq
 end
 
 def satisfies?(table, &law)
-  domain = interval(table.size)
-  domain.product(domain).all?(&law)
+  dom = domain(table)
+  dom.product(dom).all?(&law)
 end
 
 def commutative? table
-  domain = interval(table.size)
-  domain.product(domain).all? {|x, y| table[x][y] == table[y][x]}
+  dom = domain(table)
+  dom.product(dom).all? {|x, y| table[x][y] == table[y][x]}
 end
 
 def associative? table
-  domain = interval(table.size)
-  domain.product(domain).product(domain).all? do |(x, y), z|
+  dom = domain(table)
+  dom.product(dom).product(dom).all? do |(x, y), z|
     table[x][table[y][z]] == table[table[x][y]][z]
   end
 end
 
 def left_cancellative? table
-  domain = interval(table.size)
-  domain.all? {|x| injective?(table[x])}
+  domain(table).all? {|x| injective?(table[x])}
 end
 
 def right_cancellative? table
@@ -101,8 +103,8 @@ end
 
 def identity table
   #left identity if it exists
-  domain = interval(table.size)
-  domain.find {|x| domain.all? {|y| table[x][y] == y}}
+  dom = domain(table)
+  dom.find {|x| dom.all? {|y| table[x][y] == y}}
 end
 
 def inverses? table
@@ -110,8 +112,8 @@ def inverses? table
   e = identity(table)
   if e
     #return the identity if it has inverses
-    domain = interval(table.size)
-    domain.all? {|x| domain.any? {|y| table[x][y] == e && table[y][x] == e}} && e
+    dom = domain(table)
+    dom.all? {|x| dom.any? {|y| table[x][y] == e && table[y][x] == e}} && e
   else
     puts "no identity"
   end
@@ -119,12 +121,12 @@ end
 
 def homomorphism? seq, table
   #seq is a function given as an array of numbers, we return whether it is a homomorphism wrt the multiplication table
-  domain = interval(table.size)
-  domain.product(domain).all? {|x, y| seq[table[x][y]] == table[seq[x]][seq[y]]}
+  dom = domain(table)
+  dom.product(dom).all? {|x, y| seq[table[x][y]] == table[seq[x]][seq[y]]}
 end
 
 def idempotent? table
-  interval(table.size).all? {|i| table[i][i] == i}
+  domain(table).all? {|i| table[i][i] == i}
 end
 
 def fixpoints seq
@@ -324,10 +326,10 @@ def p_as_set array
 end
 
 def gen_cyclic_tptp n
-  domain = (0...n).to_a
-  axs = ["fof(dom, axiom,\n  #{domain.map {|i| "X = #{i}"}.join(" | ")}\n).",
-         "fof(distinct, axiom,\n  #{domain.map {|i| ((i+1)...n).map {|j| "#{i} != #{j}"}}.flatten.join(" & ")}\n).",
-         "fof(succ, axiom,\n  #{domain.map {|i| "s(#{i}) = #{i == n - 1 ? 0 : i + 1}"}.join(" & ")}\n).",
+  dom = (0...n).to_a
+  axs = ["fof(dom, axiom,\n  #{dom.map {|i| "X = #{i}"}.join(" | ")}\n).",
+         "fof(distinct, axiom,\n  #{dom.map {|i| ((i+1)...n).map {|j| "#{i} != #{j}"}}.flatten.join(" & ")}\n).",
+         "fof(succ, axiom,\n  #{dom.map {|i| "s(#{i}) = #{i == n - 1 ? 0 : i + 1}"}.join(" & ")}\n).",
          "fof(def_S, axiom,\n  s(X) = m(X, X)\n).",
          "fof(eq1518, axiom,\n  X = m(s(Y), m(X, m(Y, X)))\n).",
          "fof(left_mul_inj, axiom,\n  m(Z, Y) = m(Z, W) => Y = W\n).", #speeds it up hugely
@@ -352,10 +354,10 @@ def linear_auxiliary table, &blk
 
   #we take a block for processing because some of the magmas are huge and also idempotent so they would generate an auxiliary magma for every element
 
-  domain = interval(table.size)
+  dom = domain(table)
   puts "size: #{table.size}"
   #the zero must be idempotent, and its left and right multiplication operations must be invertible for this construction to work
-  poss_zeros = domain.select {|i| injective?(table[i]) && injective?(column(table, i)) && table[i][i] == i}
+  poss_zeros = dom.select {|i| injective?(table[i]) && injective?(column(table, i)) && table[i][i] == i}
   if poss_zeros.empty?
     #puts "no possible zeros"
     return nil
@@ -374,7 +376,7 @@ def linear_auxiliary table, &blk
 
     #x + y = (Rₑ⁻¹x).(Lₑ⁻¹y)
     #give the table for + along with the two functions
-    tab = domain.map {|x| domain.map {|y| table[r_z_inv[x]][l_z_inv[y]]}}
+    tab = dom.map {|x| dom.map {|y| table[r_z_inv[x]][l_z_inv[y]]}}
     blk[tab, l_z, r_z]
   end
 end
@@ -438,13 +440,13 @@ def describe table, show_fixpoints=false
   #puts line_break_array(table)
   sep = n > 10 ? " " : ""
   puts "size = #{n}"
-  set = interval(n)
-  square = set.map {|i| table[i][i]}
+  dom = interval(n)
+  square = dom.map {|i| table[i][i]}
   square_cycles = cycles(square, show_fixpoints) if injective?(square)
-  left_is_square = set.select {|y| table.all? {|row| row[y] == square[y]}}
-  other_lefts = invert_group((set).map {|x| [x, table[x]]}.to_h)
+  left_is_square = dom.select {|y| table.all? {|row| row[y] == square[y]}}
+  other_lefts = invert_group(dom.map {|x| [x, table[x]]}.to_h)
   has_lis = !left_is_square.empty?
-  sq_frac = set.sum {|x| set.count {|y| table[x][y] == square[y]}}
+  sq_frac = dom.sum {|x| dom.count {|y| table[x][y] == square[y]}}
   puts "square frac: #{sq_frac}/#{n**2} = #{sq_frac.to_f / n**2}"
   puts("A = #{p_as_set(left_is_square)}") if has_lis
   puts("Sx = #{pp_cycles(square_cycles, sep)}") if square_cycles
