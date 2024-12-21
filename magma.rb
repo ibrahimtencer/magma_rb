@@ -22,9 +22,7 @@ end
 
 def invert_perm perm
   #invert an array of integers seen as a permutation
-  res = []
-  perm.each_with_index.map {|x, i| res[x] = i}
-  res
+  [].tap {|res| perm.each_with_index.map {|x, i| res[x] = i}}
 end
 
 def inverse x, modulus
@@ -236,17 +234,17 @@ def sub_search677poly m
 end
 
 def search677poly m
-  res = []
-  (2...m).each do |i|
-    cands = sub_search677poly(i)
-    if cands.empty?
-      puts "none for #{i}"
-    else
-      p cands
-      res << cands
+  [].tap do |res|
+    (2...m).each do |i|
+      cands = sub_search677poly(i)
+      if cands.empty?
+        puts "none for #{i}"
+      else
+        p cands
+        res << cands
+      end
     end
   end
-  res
 end
 
 #x = (yy)(x(yx))
@@ -313,11 +311,11 @@ end
 
 def invert_group hash
   #returns a hash whose keys are hash's values, with the array of keys that went to it as the values
-  res = {}
-  hash.values.each do |v|
-    res[v] = hash.keys.select {|k| hash[k] == v}
+  {}.tap do |res|
+    hash.values.each do |v|
+      res[v] = hash.keys.select {|k| hash[k] == v}
+    end
   end
-  res
 end
 
 def p_as_set array
