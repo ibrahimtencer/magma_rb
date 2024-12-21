@@ -610,15 +610,6 @@ def simplify_677 lhs, rhs, elts
   else
     [lhs, rhs]
   end
-
-  #yx = ev_product(y, x, elts)
-  #if yx
-  #  yx_y = ev_product(yx, y, elts)
-  #  [y, [x, [yx, y]]]
-  #else
-  #[y, [x, [[y, x], y]]]
-  ##give the simplest equality here
-  #end
 end
 
 def multiplication_table elts
