@@ -397,6 +397,20 @@ def parse_extensions
   tables
 end
 
+AC_info = -> tab, r, l {
+  assoc = associative?(tab)
+  comm = commutative?(tab)
+  if assoc && comm
+    :ac
+  elsif assoc
+    :a
+  elsif comm
+    :c
+  else
+    :n
+  end
+}
+
 def analyze_extensions
   #analyzes cohomological extensions of linear 677 magmas - are they linear?
   #tns = 0...(tables.size)
@@ -408,20 +422,19 @@ def analyze_extensions
   puts "all left cancellative" if tables.all? {|t| left_cancellative?(t)}
   puts "all right cancellative" if tables.all? {|t| right_cancellative?(t)}
   tables.map do |table|
-    linear_auxiliary(table) do |tab, r, l|
-      assoc = associative?(tab)
-      comm = commutative?(tab)
-      if assoc && comm
-        :ac
-      elsif assoc
-        :a
-      elsif comm
-        :c
-      else
-        :n
-      end
-    end.tally || :nz
+    linear_auxiliary(table, &AC_info).tally || :nz
   end
+end
+
+def parse_block s
+  s.split("\n").map {|line| line.split.map {|x| x.to_i}}
+end
+
+def analyze_order_125
+  table = parse_block(File.read("magma125.in"))
+  #raise ValueError.new("bad table") unless valid_table?(table)
+  linear_auxiliary(table) {|tab, l, r| [homomorphism?(l, tab), homomorphism?(l, tab)]}
+  #linear_auxiliary(table, &AC_info).tally
 end
 
 def describe table, show_fixpoints=false
