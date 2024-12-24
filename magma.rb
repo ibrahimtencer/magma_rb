@@ -408,25 +408,19 @@ def analyze_extensions
   puts "all left cancellative" if tables.all? {|t| left_cancellative?(t)}
   puts "all right cancellative" if tables.all? {|t| right_cancellative?(t)}
   tables.map do |table|
-    res = linear_auxiliary(table)
-
-    if res
-      res.map do |tab, r, l|
-        assoc = associative?(tab)
-        comm = commutative?(tab)
-        if assoc && comm
-          :ac
-        elsif assoc
-          :a
-        elsif comm
-          :c
-        else
-          :n
-        end
-      end.tally
-    else
-      :nz
-    end
+    linear_auxiliary(table) do |tab, r, l|
+      assoc = associative?(tab)
+      comm = commutative?(tab)
+      if assoc && comm
+        :ac
+      elsif assoc
+        :a
+      elsif comm
+        :c
+      else
+        :n
+      end
+    end.tally || :nz
   end
 end
 
