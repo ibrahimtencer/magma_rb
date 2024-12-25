@@ -748,6 +748,9 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
   end
 end
 
+def explore table
+  JSON.load(`../equational_theories/scripts/explore_magma.py "#{table}" --json`)["satisfies"]
+end
 
 #usage:
 #describe(fmb_to_array("..."))
