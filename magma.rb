@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 require 'prime'
+require 'json'
 
 ###############################
 ### General utility methods ###
