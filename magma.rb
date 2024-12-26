@@ -14,13 +14,18 @@ def domain table
   interval(table.size)
 end
 
+def rdomain table, n=1
+  dom = 0...(table.size)
+  n == 1 ? dom : enum_prod(*([dom]*n))
+end
+
 def column table, i
   table.map {|row| row[i]}
 end
 
 def transpose table
   #return the opposite operation: x *' y = y * x
-  domain(table).map {|i| column(table, i)}
+  rdomain(table).map {|i| column(table, i)}
 end
 
 def injective? seq
@@ -36,7 +41,7 @@ end
 def numeric_table dom, op
   #make the domain 0...n
   dom = dom.to_a
-  ndom = domain(dom)
+  ndom = rdomain(dom)
   #p dom
   ndom.map {|i| ndom.map {|j| dom.index(op[dom[i], dom[j]])}}
   #ndom.map {|i| ndom.map {|j| r = op[dom[i], dom[j]]; r2 = dom.index(r); if r2.nil? then p r; return else r2 end}}
@@ -53,13 +58,12 @@ end
 
 def valid_table? table
   n = table.size
-  dom = interval(n)
+  dom = rdomain(table)
   table.all? {|row| row.is_a?(Array) && row.size == n && subset?(row, dom)}
 end
 
 def table_to_values table
-  dom = domain(table)
-  dom.product(dom).map {|i, j| [[i, j], table[i][j]]}.to_h
+  rdomain(table, 2).map {|i, j| [[i, j], table[i][j]]}.to_h
 end
 
 def table_from_values vals
@@ -77,24 +81,21 @@ def renumber table, ar
 end
 
 def satisfies?(table, &law)
-  dom = domain(table)
-  dom.product(dom).all?(&law)
+  rdomain(table, 2).all?(&law)
 end
 
 def commutative? table
-  dom = domain(table)
-  dom.product(dom).all? {|x, y| table[x][y] == table[y][x]}
+  rdomain(table, 2).all? {|x, y| table[x][y] == table[y][x]}
 end
 
 def associative? table
-  dom = domain(table)
-  dom.product(dom).product(dom).all? do |(x, y), z|
+  rdomain(table, 3).all? do |x, y, z|
     table[x][table[y][z]] == table[table[x][y]][z]
   end
 end
 
 def left_cancellative? table
-  domain(table).all? {|x| injective?(table[x])}
+  rdomain(table).all? {|x| injective?(table[x])}
 end
 
 def right_cancellative? table
@@ -104,7 +105,7 @@ end
 
 def identity table
   #left identity if it exists
-  dom = domain(table)
+  dom = rdomain(table)
   dom.find {|x| dom.all? {|y| table[x][y] == y}}
 end
 
@@ -113,7 +114,7 @@ def inverses? table
   e = identity(table)
   if e
     #return the identity if it has inverses
-    dom = domain(table)
+    dom = rdomain(table)
     dom.all? {|x| dom.any? {|y| table[x][y] == e && table[y][x] == e}} && e
   else
     puts "no identity"
@@ -122,12 +123,11 @@ end
 
 def homomorphism? seq, table
   #seq is a function given as an array of numbers, we return whether it is a homomorphism wrt the multiplication table
-  dom = domain(table)
-  dom.product(dom).all? {|x, y| seq[table[x][y]] == table[seq[x]][seq[y]]}
+  rdomain(table, 2).all? {|x, y| seq[table[x][y]] == table[seq[x]][seq[y]]}
 end
 
 def idempotent? table
-  domain(table).all? {|i| table[i][i] == i}
+  rdomain(table).all? {|i| table[i][i] == i}
 end
 
 def fixpoints seq
@@ -347,7 +347,7 @@ def p_as_set array
 end
 
 def gen_cyclic_tptp n
-  dom = interval(n)
+  dom = 0...n
   axs = ["fof(dom, axiom,\n  #{dom.map {|i| "X = #{i}"}.join(" | ")}\n).",
          "fof(distinct, axiom,\n  #{dom.map {|i| ((i+1)...n).map {|j| "#{i} != #{j}"}}.flatten.join(" & ")}\n).",
          "fof(succ, axiom,\n  #{dom.map {|i| "s(#{i}) = #{i == n - 1 ? 0 : i + 1}"}.join(" & ")}\n).",
@@ -375,7 +375,7 @@ def linear_auxiliary table, first_only=false, &blk
 
   #we take a block for processing because some of the magmas are huge and also idempotent so they would generate an auxiliary magma for every element
 
-  dom = domain(table)
+  dom = rdomain(table)
   puts "size: #{table.size}"
   #the zero must be idempotent, and its left and right multiplication operations must be invertible for this construction to work
   poss_zeros = dom.select {|i| injective?(table[i]) && injective?(column(table, i)) && table[i][i] == i}
