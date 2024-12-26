@@ -17,7 +17,9 @@ end
 def linear_table a, b, modulus
   #give the multiplication table for a linear magma
   f = linear(a, b, modulus)
-  (0...modulus).map {|x| (0...modulus).map {|y| f[x, y]}}
+  dom = 0...modulus
+  dom.map {|x| dom.map {|y| f[x, y]}}
+end
 end
 
 def invert_perm perm
