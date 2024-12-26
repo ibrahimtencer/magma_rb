@@ -397,7 +397,7 @@ def parse_extensions
   tables
 end
 
-AC_info = -> tab, r, l {
+AC_info ||= -> tab, r, l {
   assoc = associative?(tab)
   comm = commutative?(tab)
   if assoc && comm
