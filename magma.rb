@@ -687,6 +687,8 @@ def cex_677_255 elts = [A], inequalities = [[A, [[[A, A], A], A]]], instances_67
         #puts "equates #{lhs} and #{rhs}, contradiction"
         return false
       end
+
+      #todo: set a product if it's of the form x = yz!
     end
     #p instances_677
     inequalities.each do |lhs, rhs|
