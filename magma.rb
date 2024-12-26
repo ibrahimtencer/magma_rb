@@ -6,25 +6,31 @@ require 'json'
 ### General utility methods ###
 ###############################
 
+def interval n
+  (0...n).to_a
+end
+
 def domain table
   interval(table.size)
+end
+
+def column table, i
+  table.map {|row| row[i]}
+end
+
+def transpose table
+  #return the opposite operation: x *' y = y * x
+  domain(table).map {|i| column(table, i)}
+end
+
+def injective? seq
+  #interprets an array as a function on integers
+  seq.uniq == seq
 end
 
 def enum_prod(*enums)
   #shorter name
   Enumerator::Product.new(*enums)
-end
-
-def linear a, b, modulus
-  #a linear magma operation in Z/(modulus)Z
-  -> x, y {(a*x + b*y) % modulus}
-end
-
-def linear_table a, b, modulus
-  #give the multiplication table for a linear magma
-  f = linear(a, b, modulus)
-  dom = 0...modulus
-  dom.map {|x| dom.map {|y| f[x, y]}}
 end
 
 def numeric_table dom, op
@@ -41,20 +47,15 @@ def invert_perm perm
   [].tap {|res| perm.each_with_index.map {|x, i| res[x] = i}}
 end
 
-def inverse x, modulus
-  #find the inverse of x mod modulus using brute force
-  (1...modulus).each do |i|
-    return i if (i * x) % modulus == 1
-  end
-end
-
 def table_to_values table
   dom = domain(table)
   dom.product(dom).map {|i, j| [[i, j], table[i][j]]}.to_h
 end
 
-def interval n
-  (0...n).to_a
+def table_from_values vals
+  n = vals.flatten(2).max #can use sqrt size too
+  #p vals
+  (0..n).map {|x| (0..n).map {|y| vals[[x, y]]}}
 end
 
 def subset? ar1, ar2
@@ -73,20 +74,6 @@ def renumber table, ar
   vals = table_to_values(table)
   vals = vals.map {|(x, y), out| [[ar.index(x), ar.index(y)], ar.index(out)]}.to_h
   table_from_values(vals)
-end
-
-def column table, i
-  table.map {|row| row[i]}
-end
-
-def transpose table
-  #return the opposite operation: x *' y = y * x
-  domain(table).map {|i| column(table, i)}
-end
-
-def injective? seq
-  #interprets an array as a function on integers
-  seq.uniq == seq
 end
 
 def satisfies?(table, &law)
@@ -166,6 +153,32 @@ Equations ||=
    677 => [Expx, -> f, x, y {f[y, f[x, f[f[y, x], y]]]}],
    255 => [Expx, -> f, x, y {f[f[f[x, x], x], x]}]
   }
+
+def satisfies_eqn?(table, eqn_number)
+  lhs, rhs = Equations[eqn_number]
+  satisfies?(table) do |x, y|
+    lhs[table, x, y] == rhs[table, x, y]
+  end
+end
+
+def linear a, b, modulus
+  #a linear magma operation in Z/(modulus)Z
+  -> x, y {(a*x + b*y) % modulus}
+end
+
+def linear_table a, b, modulus
+  #give the multiplication table for a linear magma
+  f = linear(a, b, modulus)
+  dom = 0...modulus
+  dom.map {|x| dom.map {|y| f[x, y]}}
+end
+
+def inverse x, modulus
+  #find the inverse of x mod modulus using brute force
+  (1...modulus).each do |i|
+    return i if (i * x) % modulus == 1
+  end
+end
 
 def b_candidate? eqn, b, modulus
   #whether b is a candidate for the second coefficient in a linear magma
@@ -272,12 +285,6 @@ def find_1518 n
   table = ks.map {[nil] * n}
   ks.permutations do |perm|
   end
-end
-
-def table_from_values vals
-  n = vals.flatten(2).max #can use sqrt size too
-  p vals
-  (0..n).map {|x| (0..n).map {|y| vals[[x, y]]}}
 end
 
 def fmb_to_array(str)
