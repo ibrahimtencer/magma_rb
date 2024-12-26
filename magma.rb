@@ -791,10 +791,12 @@ def quadratic_residue? a
 end
 
 def pl v1, v2
+  #componentwise addition
   v1.zip(v2).map {|x, y| x + y}
 end
 
 def neg vec
+  #componentwise negation
   vec.map {|x| -x}
 end
 
