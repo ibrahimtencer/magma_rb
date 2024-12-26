@@ -24,7 +24,7 @@ def transpose table
 end
 
 def injective? seq
-  #interprets an array as a function on integers
+  #interprets an array of integers as a function on integers
   seq.uniq == seq
 end
 
@@ -47,6 +47,16 @@ def invert_perm perm
   [].tap {|res| perm.each_with_index.map {|x, i| res[x] = i}}
 end
 
+def subset? ar1, ar2
+  ar1.to_set.subset?(ar2.to_set)
+end
+
+def valid_table? table
+  n = table.size
+  dom = interval(n)
+  table.all? {|row| row.is_a?(Array) && row.size == n && subset?(row, dom)}
+end
+
 def table_to_values table
   dom = domain(table)
   dom.product(dom).map {|i, j| [[i, j], table[i][j]]}.to_h
@@ -56,16 +66,6 @@ def table_from_values vals
   n = vals.flatten(2).max #can use sqrt size too
   #p vals
   (0..n).map {|x| (0..n).map {|y| vals[[x, y]]}}
-end
-
-def subset? ar1, ar2
-  ar1.to_set.subset?(ar2.to_set)
-end
-
-def valid_table? table
-  n = table.size
-  dom = interval(n)
-  table.all? {|row| row.is_a?(Array) && row.size == n && subset?(row, dom)}
 end
 
 def renumber table, ar
