@@ -10,6 +10,11 @@ def domain table
   interval(table.size)
 end
 
+def enum_prod(*enums)
+  #shorter name
+  Enumerator::Product.new(*enums)
+end
+
 def linear a, b, modulus
   #a linear magma operation in Z/(modulus)Z
   -> x, y {(a*x + b*y) % modulus}
@@ -21,6 +26,14 @@ def linear_table a, b, modulus
   dom = 0...modulus
   dom.map {|x| dom.map {|y| f[x, y]}}
 end
+
+def numeric_table dom, op
+  #make the domain 0...n
+  dom = dom.to_a
+  ndom = domain(dom)
+  #p dom
+  ndom.map {|i| ndom.map {|j| dom.index(op[dom[i], dom[j]])}}
+  #ndom.map {|i| ndom.map {|j| r = op[dom[i], dom[j]]; r2 = dom.index(r); if r2.nil? then p r; return else r2 end}}
 end
 
 def invert_perm perm
