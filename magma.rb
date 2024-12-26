@@ -347,7 +347,7 @@ def p_as_set array
 end
 
 def gen_cyclic_tptp n
-  dom = (0...n).to_a
+  dom = interval(n)
   axs = ["fof(dom, axiom,\n  #{dom.map {|i| "X = #{i}"}.join(" | ")}\n).",
          "fof(distinct, axiom,\n  #{dom.map {|i| ((i+1)...n).map {|j| "#{i} != #{j}"}}.flatten.join(" & ")}\n).",
          "fof(succ, axiom,\n  #{dom.map {|i| "s(#{i}) = #{i == n - 1 ? 0 : i + 1}"}.join(" & ")}\n).",
