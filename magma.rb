@@ -770,6 +770,54 @@ def explore table
   JSON.load(`../equational_theories/scripts/explore_magma.py "#{table}" --json`)["satisfies"]
 end
 
+def first_nth_root_of_1 n, modulus
+  #works for prime n and modulus, doesn't check if it has a lower exponent
+  (2...modulus).each do |i|
+    if (i**n % modulus) == 1
+      return i
+    end
+  end
+  nil
+end
+
+def quadratic_residue? a
+end
+
+def pl v1, v2
+  v1.zip(v2).map {|x, y| x + y}
+end
+
+def neg vec
+  vec.map {|x| -x}
+end
+
+def noncanc_677_table modulus=1
+  #modulus is the size of the finite cyclic field F
+  w = first_nth_root_of_1(3, modulus)
+  z = first_nth_root_of_1(5, modulus)
+  if !w || !z
+    puts "no candidates"
+    return
+  end
+  puts modulus
+  m = 31
+  squares = (0...m).map {|i| (i*i) % m}.uniq
+  ff = -> a, h {if a.zero?
+                  (-z*h)
+                elsif squares.include?(a)
+                  h
+                else
+                  (-w*h)
+                end % modulus}
+  f = -> a {[(-2 * a[0]) % m, ff[a[0], a[1]]]}
+  dom = enum_prod(0...m, 0...modulus)
+  #dom.map {|x| dom.map {|y| f[x, y]}}
+  #op = -> x, y {[x[0] + y[0], x[1] + y[1] + f(y - x)}
+  op = -> x, y {x1, x2 = pl(pl(x, y), f[pl(y, neg(x))]); [x1 % m, x2 % modulus]} #translation-invariant ansatz
+  numeric_table(dom, op)
+end
+#(1..100).each {|i| $t = noncanc_677_table(i); $t && break };1
+#File.write("noncanc_677_table.txt", $t.to_s);1
 #usage:
 #describe(fmb_to_array("..."))
 #renumber(table, Corr)
