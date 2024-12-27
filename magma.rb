@@ -801,6 +801,7 @@ def neg vec
 end
 
 def noncanc_677_table modulus=1
+  #not correct currently
   #modulus is the size of the finite cyclic field F
   w = first_nth_root_of_1(3, modulus)
   z = first_nth_root_of_1(5, modulus)
