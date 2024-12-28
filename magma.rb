@@ -219,7 +219,7 @@ end
 
 $none = []
 
-def search_linear antecedent = 677, cons = [255], upto: 20, describe: false, describe_op: false
+def search_linear antecedent = 677, cons = [255], upto: 20, describe: false, describe_op: false, &blk
   #generate linear models for an equation
   #cons is the consequents
   Prime.each do |m|
@@ -245,6 +245,7 @@ def search_linear antecedent = 677, cons = [255], upto: 20, describe: false, des
       table = linear_table(a, b, m)
       describe(table) if describe
       describe(transpose(table)) if describe_op
+      blk[table] if blk
     end
   end
 end
