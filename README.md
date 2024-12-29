@@ -2,7 +2,7 @@ In mathematics, a [magma](https://en.wikipedia.org/wiki/Magma_\(algebra\)) is a 
 
 This code was used in investigations related to Terence Tao's [Equational Theories Project](https://teorth.github.io/equational_theories/).
 
-Includes many methods for working with magmas, linear magmas (with operation x*y = ax + by in some ring, particularly finite prime fields), with special focus on models of equations 1518 and 677.
+Includes many methods for working with magmas, in particular linear magmas (with operation x*y = ax + by in some ring, particularly finite prime fields), and with special focus on models of equations 1518 and 677.
 
 677_probably_nonlinear.txt contains magmas generated using magma cohomology by Matthew Bolan.
 
