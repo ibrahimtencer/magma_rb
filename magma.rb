@@ -497,7 +497,7 @@ def describe table, show_fixpoints=false
   #puts line_break_array(table)
   sep = n > 10 ? " " : ""
   puts "size = #{n}"
-  dom = interval(n)
+  dom = rdomain(table)
   square = dom.map {|i| table[i][i]}
   square_cycles = cycles(square, show_fixpoints) if injective?(square)
   left_is_square = dom.select {|y| table.all? {|row| row[y] == square[y]}}
