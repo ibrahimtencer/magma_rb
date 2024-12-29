@@ -806,6 +806,70 @@ def explore table
   JSON.load(`../equational_theories/scripts/explore_magma.py "#{table}" --json`)["satisfies"]
 end
 
+def tree_get tree, indices
+  #get the subtree specified by the indices array
+  if indices.empty?
+    tree
+  else
+    tree_get(tree[indices[0]], indices[1..])
+  end
+end
+
+def tree_set tree, indices, value
+  #get the subtree specified by the indices array
+  if indices.size == 1
+    tree[indices[0]] = value
+  else
+    tree_set(tree[indices[0]], indices[1..], value)
+  end
+end
+
+VariableNames ||= "xyzwuvrst"
+
+def parse_expression expr
+  if expr.size == 1 && VariableNames.index(expr)
+    expr
+  else
+    [].tap do |res|
+      #series of left/right
+      #notice that outer parentheses are not present in the given list
+      indices = [0]
+      expr.each_char do |c|
+        if VariableNames.index(c)
+          tree_set(res, indices, c)
+          #indices.pop
+        end
+
+        case c
+        when "("
+          tree_set(res, indices, [])
+          indices << 0
+        when "*"
+          indices[-1] += 1
+        when ")"
+          indices.pop
+        end
+      end
+    end
+  end
+end
+
+def parse_equation str
+  left, right = str.split(" = ")
+  [parse_expression(left), parse_expression(right)]
+end
+
+def load_all_eqs
+  eqs = File.read("equations.txt").gsub("◇", "*").split("\n").each_with_index.map do |eq, i|
+    pe = parse_equation(eq)
+    #1-indexed
+    [i + 1, {text: eq, equation: pe, lhs: pe[0], rhs: pe[1]}]
+  end.to_h
+end
+
+AllEqs ||= load_all_eqs
+#AllEqs.select {|e| e.start_with?("x = y ")}
+
 def first_nth_root_of_1 n, modulus
   #works for prime n and modulus, doesn't check if it has a lower exponent
   (2...modulus).each do |i|
