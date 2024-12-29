@@ -860,7 +860,8 @@ def parse_equation str
 end
 
 def load_all_eqs
-  eqs = File.read("equations.txt").gsub("◇", "*").split("\n").each_with_index.map do |eq, i|
+  eqs = File.read("equations.txt").each_line.each_with_index.map do |eq, i|
+    eq = eq.gsub("◇", "*").strip
     pe = parse_equation(eq)
     #1-indexed
     [i + 1, {text: eq, equation: pe, lhs: pe[0], rhs: pe[1]}]
