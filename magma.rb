@@ -166,6 +166,61 @@ def nontrivial_one_generated_submagmas table
   one_generated_submagmas(table).map(&:sort).uniq.select {|sm| sm.size != 1 && sm.size != n}
 end
 
+def generators table, existing_generators=[], existing_submagma=nil
+  #give one possibly minimal set of generators
+  #maybe use recursion here?
+  dom = domain(table).to_a
+  existing_submagma ||= submagma(table, existing_generators)
+  x = (dom - existing_submagma)[0]
+  while x
+    #p existing_generators
+    #p x
+    existing_generators << x
+    existing_submagma = submagma(table, existing_submagma + [x])
+    x = (dom - existing_submagma)[0]
+  end
+
+  existing_generators
+end
+
+def complete_assignment table, assignment, bijective=false
+  #assignment is an array of values of a putative homomorphism
+  #assumes it's defined on at least a set of generators, otherwise may not terminate
+  #does not check that the result is a homomorphism
+  dom = domain(table)
+  while assignment.include?(nil)
+    defined = dom.select {|x| assignment[x]} #where it's defined
+    enum_prod(defined, defined).each do |x, y|
+      assignment[table[x][y]] = table[assignment[x]][assignment[y]]
+    end
+  end
+
+  assignment
+end
+
+def endomorphisms table, bijective=false
+  gens = generators(table)
+  dom = domain(table)
+  p gens
+  [].tap do |res|
+    #p enum_prod(*[dom]*gens.size).to_a
+    enum_prod(*[dom]*gens.size).each do |initial_vals|
+      if !bijective || initial_vals == initial_vals.uniq
+        vals = [nil] * dom.size
+        gens.zip(initial_vals).each {|x, fx| vals[x] = fx}
+        fn = complete_assignment(table, vals)
+        if (!bijective || injective?(fn)) && homomorphism?(fn, table)
+          res << fn
+        end
+      end
+    end
+  end
+end
+
+def automorphisms table
+  endomorphisms(table, true)
+end
+
 Expx ||= -> f, x, y {x}
 
 Equations ||=
