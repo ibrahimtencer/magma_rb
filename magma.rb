@@ -197,6 +197,34 @@ def gen_2 table
   nil
 end
 
+def minimum_generating_set table, existing_generators=[], max: generators(table).size
+  #not working yet
+  if existing_generators.size + 1 == max
+    return "default is minimum"
+  end
+  #n = gs.size - 1
+  #puts "starting with generating set of size #{gs.size}, looking for one of size #{n}"
+  dom = domain(table)
+  existing_submagma = submagma(table, existing_generators)
+  #subs = dom.map {|x| [x, submagma(table, [x])]}.to_h
+
+  rest = dom - existing_submagma
+  rest.each do |x|
+    if submagma(table, existing_submagma + [x]) == table
+      return existing_generators + [x]
+    end
+  end
+
+  #rest.each do |x|
+  #  minimum_generating_set(table, existing_generators + [x], max: max)
+  #  if 
+  #    submagma(table, existing_submagma + [x]) == table
+  #    return existing_generators + [x]
+  #  end
+  #end
+  nil
+end
+
 def complete_assignment table, assignment, bijective=false
   #assignment is an array of values of a putative homomorphism
   #assumes it's defined on at least a set of generators, otherwise may not terminate
