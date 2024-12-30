@@ -152,7 +152,7 @@ def submagma table, generators
       end
     end
   end
-  res.sort
+  res.sort #needed e.g. for comparing with the table itself
 end
 
 def one_generated_submagmas table
