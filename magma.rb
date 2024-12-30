@@ -239,8 +239,9 @@ Equations ||=
 
 def satisfies_eqn?(table, eqn_number)
   lhs, rhs = Equations[eqn_number]
+  tab_op = -> x, y {table[x][y]}
   satisfies?(table) do |x, y|
-    lhs[table, x, y] == rhs[table, x, y]
+    lhs[tab_op, x, y] == rhs[tab_op, x, y]
   end
 end
 
