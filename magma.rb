@@ -183,6 +183,20 @@ def generators table, existing_generators=[], existing_submagma=nil
   existing_generators
 end
 
+def gen_2 table
+  #looks for a generating set of size <= 2
+  dom = domain(table).to_a
+  dom.each do |x|
+    m = submagma(table, [x])
+    return [x] if m == dom
+    (dom - m).select {|y| y > x}.each do |y|
+      m = submagma(table, [x, y])
+      return [x, y] if m == dom
+    end
+  end
+  nil
+end
+
 def complete_assignment table, assignment, bijective=false
   #assignment is an array of values of a putative homomorphism
   #assumes it's defined on at least a set of generators, otherwise may not terminate
