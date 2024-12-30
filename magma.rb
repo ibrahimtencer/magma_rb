@@ -205,25 +205,32 @@ def complete_assignment table, assignment, bijective=false
   while assignment.include?(nil)
     defined = dom.select {|x| assignment[x]} #where it's defined
     enum_prod(defined, defined).each do |x, y|
-      assignment[table[x][y]] = table[assignment[x]][assignment[y]]
+      newval = table[assignment[x]][assignment[y]]
+      oldval = assignment[table[x][y]]
+      #inconsistency
+      return nil if oldval && oldval != newval
+      assignment[table[x][y]] = newval
     end
   end
 
   assignment
 end
 
-def endomorphisms table, bijective=false
-  gens = generators(table)
+def endomorphisms table, bijective=false, generators: nil
+  gens = generators || generators(table)
   dom = domain(table)
   p gens
+  last_first = 0
   [].tap do |res|
     #p enum_prod(*[dom]*gens.size).to_a
     enum_prod(*[dom]*gens.size).each do |initial_vals|
+      print(initial_vals[0].to_s + " ") if initial_vals[0] > last_first
+      last_first = initial_vals[0]
       if !bijective || initial_vals == initial_vals.uniq
         vals = [nil] * dom.size
         gens.zip(initial_vals).each {|x, fx| vals[x] = fx}
         fn = complete_assignment(table, vals)
-        if (!bijective || injective?(fn)) && homomorphism?(fn, table)
+        if fn && (!bijective || injective?(fn)) && homomorphism?(fn, table)
           res << fn
         end
       end
@@ -231,8 +238,8 @@ def endomorphisms table, bijective=false
   end
 end
 
-def automorphisms table
-  endomorphisms(table, true)
+def automorphisms table, generators: nil
+  endomorphisms(table, true, generators: generators)
 end
 
 Expx ||= -> f, x, y {x}
