@@ -314,6 +314,10 @@ def satisfies_eqn?(table, eqn_number)
   end
 end
 
+def op_table op, dom
+  dom.map {|x| dom.map {|y| op[x, y]}}
+end
+
 def linear a, b, modulus
   #a linear magma operation in Z/(modulus)Z
   -> x, y {(a*x + b*y) % modulus}
@@ -403,8 +407,30 @@ def search_linear antecedent = 677, cons = [255], upto: 20, describe: false, des
   end
 end
 
-def find_such_that modulus, &blk
-  blk.call
+def search_polynomial antecedent = 677, cons = [255], upfrom: 1, upto: 20, describe: false, describe_op: false, &blk
+  #x.y = ax² + (bx + c)y + d, a b c nonzero
+  #none satisfying 677 up to and including 41
+  Prime.each do |m|
+    next if m < upfrom
+    return if m > upto
+    dom   = 0...m
+    nzdom = 1...m
+    print "#{m} "
+    #next if m %
+    enum_prod(nzdom, nzdom, nzdom, dom).each do |a, b, c, d|
+      op = -> x, y {(a*x**2 + (b*x + c)*y + d) % m}
+      table = op_table(op, dom)
+      #puts "modulus: #{m}, a: #{a}, b: #{b}"
+
+      if satisfies_eqn?(table, 677)
+        describe(table) if describe
+        blk[table] if blk
+        puts "a b c d: #{a}, #{b}, #{c}, #{d}"
+        return table if !satisfies_eqn?(table, 255)
+      end
+      #([antecedent] + cons).each do |eqn|
+    end
+  end
 end
 
 def sub_search677poly m
@@ -1004,9 +1030,6 @@ def first_nth_root_of_1 n, modulus
     end
   end
   nil
-end
-
-def quadratic_residue? a
 end
 
 def pl v1, v2
