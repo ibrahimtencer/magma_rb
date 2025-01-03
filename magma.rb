@@ -270,6 +270,26 @@ def automorphisms table, generators: nil
   endomorphisms(table, true, generators: generators)
 end
 
+
+def test_twists table, generators: nil, auts: nil
+  #given a 677 model, tests whether there is some generalized-linear twist x, y -> f(x)*g(y) that also satisfies 677 and possibly 255.
+  auts ||= automorphisms(table, generators: generators)
+  dom = domain(table)
+  enum_prod(auts, auts).each do |f, g|
+    tab = dom.map {|x| dom.map {|y| table[f[x]][g[y]]}}
+    if satisfies_eqn?(tab, 677)
+      puts
+      puts "677 satisfied"
+      if !satisfies_eqn?(tab, 255)
+        puts "255 refuted"
+        return [tab, f, g]
+      end
+    else
+      print "n"
+    end
+  end
+  nil
+end
 Expx ||= -> f, x, y {x}
 
 Equations ||=
