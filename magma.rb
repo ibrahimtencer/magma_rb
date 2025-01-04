@@ -252,7 +252,7 @@ def endomorphisms table, bijective=false, generators: nil
   [].tap do |res|
     #p enum_prod(*[dom]*gens.size).to_a
     enum_prod(*[dom]*gens.size).each do |initial_vals|
-      print(initial_vals[0].to_s + " ") if initial_vals[0] > last_first
+      print(initial_vals[0].to_s + "(#{res.size}) ") if initial_vals[0] > last_first
       last_first = initial_vals[0]
       if !bijective || initial_vals == initial_vals.uniq
         vals = [nil] * dom.size
