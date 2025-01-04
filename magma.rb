@@ -407,9 +407,35 @@ def search_linear antecedent = 677, cons = [255], upto: 20, describe: false, des
   end
 end
 
+class LazyMagma
+  attr_accessor :op, :dom, :table
+
+  def initialize op, dom
+    @op = op
+    @dom = dom
+    @vals = {}
+    @table = dom.map {[]}
+  end
+
+  def mul x, y
+    #val = @table[x][y]
+    @table[x][y] || (@table[x][y] = op[x, y])
+  end
+
+  def satisfies? &blk
+  end
+
+  def satisfies_eqn? eqn_number
+    #only works for 2-variable equations currently
+    lhs, rhs = Equations[eqn_number]
+    tab_op = method(:mul) #-> x, y {table[x][y]}
+    enum_prod(@dom, @dom).all? {|x, y| lhs[tab_op, x, y] == rhs[tab_op, x, y]}
+  end
+end
+
 def search_polynomial antecedent = 677, cons = [255], upfrom: 1, upto: 20, describe: false, describe_op: false, &blk
   #x.y = ax² + (bx + c)y + d, a b c nonzero
-  #none satisfying 677 up to and including 41
+  #none satisfying 677 up to and including 97
   Prime.each do |m|
     next if m < upfrom
     return if m > upto
@@ -419,14 +445,13 @@ def search_polynomial antecedent = 677, cons = [255], upfrom: 1, upto: 20, descr
     #next if m %
     enum_prod(nzdom, nzdom, nzdom, dom).each do |a, b, c, d|
       op = -> x, y {(a*x**2 + (b*x + c)*y + d) % m}
-      table = op_table(op, dom)
-      #puts "modulus: #{m}, a: #{a}, b: #{b}"
+      mag = LazyMagma.new(op, dom)
 
-      if satisfies_eqn?(table, 677)
-        describe(table) if describe
+      if mag.satisfies_eqn?(677)
+        describe(mag.table) if describe
         blk[table] if blk
         puts "a b c d: #{a}, #{b}, #{c}, #{d}"
-        return table if !satisfies_eqn?(table, 255)
+        return mag.table if !mag.satisfies_eqn?(255)
       end
       #([antecedent] + cons).each do |eqn|
     end
