@@ -80,8 +80,8 @@ def renumber table, ar
   table_from_values(vals)
 end
 
-def satisfies?(table, &law)
-  domain(table, 2).all?(&law)
+def satisfies?(table, arity=2, &law)
+  domain(table, arity).all?(&law)
 end
 
 def commutative? table
